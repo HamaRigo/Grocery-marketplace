@@ -1,0 +1,28 @@
+import bcrypt from 'bcrypt'
+import { randomUUID } from 'crypto'
+import { eq } from 'drizzle-orm'
+import { db } from '../../platform/db'
+import { emit, Events } from '../../platform/events'
+import { users, userRoles } from '../../db/schema'
+
+export const IdentityService = {
+  async register(email: string, password: string, phone?: string) {
+    const passwordHash = await bcrypt.hash(password, 10)
+    const [user] = await db.insert(users).values({ email, phone, passwordHash }).returning()
+    await db.insert(userRoles).values({ userId: user.id, role: 'customer', tenantId: null })
+    emit(Events.UserRegistered, {
+      eventId: randomUUID(), occurredAt: new Date().toISOString(),
+      payload: { userId: user.id, email },
+    })
+    return user
+  },
+
+  async login(email: string, password: string) {
+    const [user] = await db.select().from(users).where(eq(users.email, email))
+    if (!user) throw Object.assign(new Error('Invalid credentials'), { statusCode: 401 })
+    const valid = await bcrypt.compare(password, user.passwordHash)
+    if (!valid) throw Object.assign(new Error('Invalid credentials'), { statusCode: 401 })
+    const roles = await db.select().from(userRoles).where(eq(userRoles.userId, user.id))
+    return { user, roles }
+  },
+}
