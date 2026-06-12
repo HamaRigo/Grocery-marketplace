@@ -1,0 +1,41 @@
+{
+  "name": "bakala-shop",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "build": "tsc",
+    "start": "node dist/main.js",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx src/db/migrate.ts",
+    "db:push": "drizzle-kit push",
+    "db:seed": "tsx src/db/seed.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "svc:notifications": "tsx src/services/notifications/index.ts",
+    "svc:tracking":      "tsx src/services/tracking/index.ts",
+    "svc:discovery":     "tsx src/services/discovery/index.ts"
+  },
+  "dependencies": {
+    "@fastify/cors": "^9",
+    "@fastify/jwt": "^8",
+    "@fastify/rate-limit": "^9",
+    "@fastify/websocket": "^8",
+    "bcrypt": "^5",
+    "dotenv": "^16",
+    "drizzle-orm": "^0.32",
+    "fastify": "^4",
+    "ioredis": "^5",
+    "postgres": "^3",
+    "@elastic/elasticsearch": "^8",
+    "zod": "^3"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5",
+    "@types/node": "^20",
+    "drizzle-kit": "^0.23",
+    "tsx": "^4",
+    "typescript": "^5",
+    "vitest": "^1"
+  }
+}

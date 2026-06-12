@@ -1,0 +1,108 @@
+version: '3.9'
+
+x-common: &common
+  build: .
+  env_file: .env
+  restart: unless-stopped
+
+services:
+  # ── Infrastructure ──────────────────────────────────────────────────────────
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: bakala
+      POSTGRES_USER: bakala
+      POSTGRES_PASSWORD: secret
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U bakala]
+      interval: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '6379:6379'
+    volumes:
+      - redisdata:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 5s
+      retries: 5
+
+  elasticsearch:
+    image: elasticsearch:8.13.4
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - '9200:9200'
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    healthcheck:
+      test: [CMD-SHELL, curl -sf http://localhost:9200/_cluster/health | grep -v '"status":"red"']
+      interval: 10s
+      retries: 10
+
+  # ── Application services ────────────────────────────────────────────────────
+
+  api:
+    <<: *common
+    command: npx tsx src/main.ts
+    ports:
+      - '3000:3000'
+    environment:
+      DATABASE_URL: postgres://bakala:secret@postgres:5432/bakala
+      REDIS_URL: redis://redis:6379
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+      JWT_SECRET: change-me-in-production
+      PORT: 3000
+    depends_on:
+      postgres:      { condition: service_healthy }
+      redis:         { condition: service_healthy }
+      elasticsearch: { condition: service_healthy }
+
+  notifications-svc:
+    <<: *common
+    command: npx tsx src/services/notifications/index.ts
+    environment:
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      redis: { condition: service_healthy }
+
+  tracking-svc:
+    <<: *common
+    command: npx tsx src/services/tracking/index.ts
+    ports:
+      - '3001:3001'
+    environment:
+      REDIS_URL: redis://redis:6379
+      TRACKING_PORT: 3001
+    depends_on:
+      redis: { condition: service_healthy }
+
+  discovery-svc:
+    <<: *common
+    command: npx tsx src/services/discovery/index.ts
+    ports:
+      - '3002:3002'
+    environment:
+      DATABASE_URL: postgres://bakala:secret@postgres:5432/bakala
+      REDIS_URL: redis://redis:6379
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+      DISCOVERY_PORT: 3002
+    depends_on:
+      postgres:      { condition: service_healthy }
+      redis:         { condition: service_healthy }
+      elasticsearch: { condition: service_healthy }
+
+volumes:
+  pgdata:
+  redisdata:
+  esdata:
