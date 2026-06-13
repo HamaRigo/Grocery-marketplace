@@ -81,4 +81,9 @@ export const FulfillmentService = {
     const [r] = await db.insert(riders).values({ userId, ownedByTenantId: tenantId, vehicle, status: 'offline' }).returning()
     return r
   },
+
+  async getRiderByUserId(userId: string) {
+    const [rider] = await db.select().from(riders).where(eq(riders.userId, userId))
+    return rider ?? null
+  },
 }

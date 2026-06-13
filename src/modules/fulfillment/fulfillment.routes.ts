@@ -1,7 +1,16 @@
 import { FastifyPluginAsync } from 'fastify'
 import { FulfillmentService } from './fulfillment.service'
+import { authenticated } from '../../platform/rbac'
 
 export const fulfillmentRoutes: FastifyPluginAsync = async (app) => {
+  // Current rider record for the logged-in user
+  app.get('/me', { onRequest: [authenticated] }, async (req, reply) => {
+    const session = (req as any).sessionUser
+    const rider = await FulfillmentService.getRiderByUserId(session.userId)
+    if (!rider) return reply.code(404).send({ error: 'No rider record for this account' })
+    return rider
+  })
+
   // Riders management (Manager / Admin)
   app.get('/riders', { onRequest: [app.authenticate] }, async (req) => {
     const { tenantId } = req.query as any

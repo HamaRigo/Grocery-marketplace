@@ -39,6 +39,9 @@ export default function Layout() {
                 <Link to="/admin/reports" className="text-gray-700 hover:text-green-600">Reports</Link>
               </>
             )}
+            {role === 'rider' && (
+              <Link to="/rider" className="text-gray-700 hover:text-green-600">My Deliveries</Link>
+            )}
             <button
               onClick={handleLogout}
               className="text-red-500 hover:text-red-700"

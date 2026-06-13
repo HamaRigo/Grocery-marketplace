@@ -1,8 +1,9 @@
-import Fastify from 'fastify'
+import Fastify, { FastifyRequest, FastifyReply } from 'fastify'
 import cookie from '@fastify/cookie'
 import fws from '@fastify/websocket'
 import cors from '@fastify/cors'
 import rateLimit from '@fastify/rate-limit'
+import { authenticated } from './platform/rbac'
 
 import { identityRoutes }    from './modules/identity/identity.routes'
 import { tenantRoutes }      from './modules/tenant/tenant.routes'
@@ -22,6 +23,9 @@ import { registerOutboxWriters }          from './platform/outbox'
 import { type SessionUser }              from './platform/session'
 
 declare module 'fastify' {
+  interface FastifyInstance {
+    authenticate: (req: FastifyRequest, reply: FastifyReply) => Promise<void>
+  }
   interface FastifyRequest {
     sessionUser: SessionUser | null
   }
@@ -41,6 +45,7 @@ export async function buildServer() {
   await app.register(fws)
 
   app.decorateRequest('sessionUser', null)
+  app.decorate('authenticate', authenticated)
 
   app.setErrorHandler((err, _req, reply) => {
     app.log.error(err)

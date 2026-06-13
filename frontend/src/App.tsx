@@ -12,11 +12,14 @@ import OrderQueuePage from './pages/manager/OrderQueuePage'
 import CatalogPage from './pages/manager/CatalogPage'
 import AdminStoresPage from './pages/admin/StoresPage'
 import ReportsPage from './pages/admin/ReportsPage'
+import RiderPage from './pages/rider/RiderPage'
+import ActiveJobPage from './pages/rider/ActiveJobPage'
 
 function RoleHome() {
   const { role } = useAuth()
   if (role === 'admin')   return <Navigate to="/admin"   replace />
   if (role === 'manager') return <Navigate to="/manager" replace />
+  if (role === 'rider')   return <Navigate to="/rider"   replace />
   return <Navigate to="/stores" replace />
 }
 
@@ -48,6 +51,9 @@ export default function App() {
 
         <Route path="/admin"         element={<AdminStoresPage />} />
         <Route path="/admin/reports" element={<ReportsPage />} />
+
+        <Route path="/rider"              element={<RiderPage />} />
+        <Route path="/rider/job/:jobId"   element={<ActiveJobPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/phone" replace />} />
