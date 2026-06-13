@@ -3,3 +3,5 @@ dist/
 .env
 *.local
 migrations/
+frontend/dist/
+frontend/.env
