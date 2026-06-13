@@ -3,8 +3,9 @@ import { FastifyPluginAsync } from 'fastify'
 import { IdentityService } from './identity.service'
 import { validate, S } from '../../platform/validate'
 
-const registerSchema = z.object({ email: S.email, password: S.password, phone: S.phone })
-const loginSchema    = z.object({ email: S.email, password: z.string().min(1) })
+const registerSchema  = z.object({ email: S.email, password: S.password, phone: S.phone })
+const loginSchema     = z.object({ email: S.email, password: z.string().min(1) })
+const phoneSchema     = z.object({ phone: S.phone })
 
 export const identityRoutes: FastifyPluginAsync = async (app) => {
   app.post('/register', async (req, reply) => {
@@ -21,5 +22,16 @@ export const identityRoutes: FastifyPluginAsync = async (app) => {
       { expiresIn: '7d' }
     )
     return { token, userId: user.id }
+  })
+
+  // Phone-only entry for customers — no password required.
+  app.post('/phone', async (req, reply) => {
+    const { phone } = validate(phoneSchema, req.body)
+    const { user, roles } = await IdentityService.loginOrCreateByPhone(phone)
+    const token = app.jwt.sign(
+      { sub: user.id, roles: roles.map(r => ({ role: r.role, tenantId: r.tenantId })) },
+      { expiresIn: '30d' }
+    )
+    return { token, userId: user.id, phone: user.phone }
   })
 }

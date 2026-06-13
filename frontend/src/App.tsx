@@ -1,8 +1,8 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './context/auth'
 import ProtectedRoute from './components/ProtectedRoute'
+import PhonePage from './pages/PhonePage'
 import LoginPage from './pages/LoginPage'
-import RegisterPage from './pages/RegisterPage'
 import StoresPage from './pages/customer/StoresPage'
 import StorePage from './pages/customer/StorePage'
 import CartPage from './pages/customer/CartPage'
@@ -14,19 +14,20 @@ import AdminStoresPage from './pages/admin/StoresPage'
 import ReportsPage from './pages/admin/ReportsPage'
 
 function RoleHome() {
-  const { role, tenantId } = useAuth()
+  const { role } = useAuth()
   if (role === 'admin')   return <Navigate to="/admin" replace />
-  if (role === 'manager') return <Navigate to={tenantId ? `/manager` : '/manager'} replace />
-  if (role === 'rider')   return <Navigate to="/stores" replace />
+  if (role === 'manager') return <Navigate to="/manager" replace />
   return <Navigate to="/stores" replace />
 }
 
 export default function App() {
   return (
     <Routes>
-      <Route path="/login"    element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
+      {/* Public entry points */}
+      <Route path="/phone" element={<PhonePage />} />
+      <Route path="/login" element={<LoginPage />} />
 
+      {/* Authenticated app */}
       <Route element={<ProtectedRoute />}>
         <Route path="/" element={<RoleHome />} />
 
@@ -43,7 +44,7 @@ export default function App() {
         <Route path="/admin/reports" element={<ReportsPage />} />
       </Route>
 
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<Navigate to="/phone" replace />} />
     </Routes>
   )
 }

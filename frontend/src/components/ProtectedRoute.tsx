@@ -4,6 +4,6 @@ import Layout from './Layout'
 
 export default function ProtectedRoute() {
   const { token } = useAuth()
-  if (!token) return <Navigate to="/login" replace />
+  if (!token) return <Navigate to="/phone" replace />
   return <Layout />
 }

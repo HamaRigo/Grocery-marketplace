@@ -29,7 +29,8 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="bg-white rounded-xl shadow-md p-8 w-full max-w-sm">
-        <h1 className="text-2xl font-bold text-green-600 mb-6">Bakala Shop</h1>
+        <h1 className="text-2xl font-bold text-green-600 mb-1">Bakala Shop</h1>
+        <p className="text-sm text-gray-400 mb-6">Staff sign in</p>
 
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
@@ -69,15 +70,14 @@ export default function LoginPage() {
         </form>
 
         <p className="mt-4 text-sm text-center text-gray-500">
-          No account?{' '}
-          <Link to="/register" className="text-green-600 hover:underline">Register</Link>
+          Customer?{' '}
+          <Link to="/phone" className="text-green-600 hover:underline">Order with your phone</Link>
         </p>
 
         <div className="mt-6 p-3 bg-gray-50 rounded text-xs text-gray-500 space-y-1">
-          <p className="font-medium">Demo accounts</p>
+          <p className="font-medium">Demo staff accounts</p>
           <p>Admin: admin@bakala.shop / admin123</p>
           <p>Manager: manager@demo.store / manager123</p>
-          <p>Customer: customer@example.com / customer123</p>
         </div>
       </div>
     </div>
