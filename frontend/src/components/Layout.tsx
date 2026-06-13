@@ -5,9 +5,9 @@ export default function Layout() {
   const { role, tenantId, logout } = useAuth()
   const navigate = useNavigate()
 
-  const handleLogout = () => {
-    logout()
-    navigate('/login')
+  const handleLogout = async () => {
+    await logout()
+    navigate('/phone')
   }
 
   return (

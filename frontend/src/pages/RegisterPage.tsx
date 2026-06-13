@@ -1,11 +1,9 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { useAuth } from '../context/auth'
 import { authApi } from '../api/auth'
 
 export default function RegisterPage() {
-  const { login } = useAuth()
-  const navigate   = useNavigate()
+  const navigate    = useNavigate()
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
   const [phone, setPhone]       = useState('')
@@ -17,9 +15,8 @@ export default function RegisterPage() {
     setError('')
     setLoading(true)
     try {
-      const { token } = await authApi.register(email, password, phone || undefined)
-      login(token)
-      navigate('/')
+      await authApi.register(email, password, phone || undefined)
+      navigate('/login')
     } catch (err) {
       setError((err as Error).message)
     } finally {

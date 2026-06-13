@@ -1,5 +1,5 @@
-import Fastify, { FastifyRequest, FastifyReply } from 'fastify'
-import fjwt from '@fastify/jwt'
+import Fastify from 'fastify'
+import cookie from '@fastify/cookie'
 import fws from '@fastify/websocket'
 import cors from '@fastify/cors'
 import rateLimit from '@fastify/rate-limit'
@@ -19,31 +19,28 @@ import { discoveryRoutes }   from './modules/discovery/discovery.routes'
 import { registerListeners }              from './platform/listeners'
 import { registerNotificationListeners }  from './modules/notifications/notifications.service'
 import { registerOutboxWriters }          from './platform/outbox'
+import { type SessionUser }              from './platform/session'
 
 declare module 'fastify' {
-  interface FastifyInstance {
-    authenticate: (req: FastifyRequest, reply: FastifyReply) => Promise<void>
-  }
-}
-
-declare module '@fastify/jwt' {
-  interface FastifyJWT {
-    user: { sub: string; roles: Array<{ role: string; tenantId: string | null }> }
+  interface FastifyRequest {
+    sessionUser: SessionUser | null
   }
 }
 
 export async function buildServer() {
   const app = Fastify({ logger: { level: process.env.NODE_ENV === 'production' ? 'warn' : 'info' } })
 
-  await app.register(cors,      { origin: true })
+  const allowedOrigin = process.env.FRONTEND_URL ?? 'http://localhost:5173'
+
+  await app.register(cors, {
+    origin: allowedOrigin,
+    credentials: true,
+  })
   await app.register(rateLimit, { max: 200, timeWindow: '1 minute' })
-  await app.register(fjwt,      { secret: process.env.JWT_SECRET! })
+  await app.register(cookie)
   await app.register(fws)
 
-  app.decorate('authenticate', async (req: FastifyRequest, reply: FastifyReply) => {
-    try { await req.jwtVerify() }
-    catch { return reply.code(401).send({ error: 'Unauthorized' }) }
-  })
+  app.decorateRequest('sessionUser', null)
 
   app.setErrorHandler((err, _req, reply) => {
     app.log.error(err)

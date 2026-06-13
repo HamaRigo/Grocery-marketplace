@@ -4,8 +4,8 @@ import { useAuth } from '../context/auth'
 import { authApi } from '../api/auth'
 
 export default function PhonePage() {
-  const { login } = useAuth()
-  const navigate   = useNavigate()
+  const { setUser } = useAuth()
+  const navigate    = useNavigate()
   const [phone, setPhone]   = useState('')
   const [error, setError]   = useState('')
   const [loading, setLoading] = useState(false)
@@ -15,8 +15,8 @@ export default function PhonePage() {
     setError('')
     setLoading(true)
     try {
-      const { token } = await authApi.phoneLogin(phone)
-      login(token)
+      const session = await authApi.phoneLogin(phone)
+      setUser(session)
       navigate('/stores')
     } catch (err) {
       setError((err as Error).message)

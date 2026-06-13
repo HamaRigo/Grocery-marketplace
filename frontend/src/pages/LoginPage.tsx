@@ -4,8 +4,8 @@ import { useAuth } from '../context/auth'
 import { authApi } from '../api/auth'
 
 export default function LoginPage() {
-  const { login } = useAuth()
-  const navigate   = useNavigate()
+  const { setUser } = useAuth()
+  const navigate    = useNavigate()
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
   const [error, setError]       = useState('')
@@ -16,8 +16,8 @@ export default function LoginPage() {
     setError('')
     setLoading(true)
     try {
-      const { token } = await authApi.login(email, password)
-      login(token)
+      const session = await authApi.login(email, password)
+      setUser(session)
       navigate('/')
     } catch (err) {
       setError((err as Error).message)

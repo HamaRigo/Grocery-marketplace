@@ -1,12 +1,10 @@
-const BASE = (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:3000'
-
+// All requests go to the same origin via Vite proxy — cookies flow automatically.
 async function req<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const token = localStorage.getItem('token')
-  const res = await fetch(`${BASE}${path}`, {
+  const res = await fetch(path, {
     ...init,
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(init.headers ?? {}),
     },
   })

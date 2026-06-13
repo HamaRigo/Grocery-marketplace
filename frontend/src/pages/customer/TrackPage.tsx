@@ -21,8 +21,8 @@ export default function TrackPage() {
 
   useEffect(() => {
     if (!id) return
-    const wsBase = (import.meta.env.VITE_WS_URL as string | undefined) ?? 'ws://localhost:3000'
-    const ws = new WebSocket(`${wsBase}/tracking/ws/${id}`)
+    const proto  = window.location.protocol === 'https:' ? 'wss' : 'ws'
+    const ws = new WebSocket(`${proto}://${window.location.host}/tracking/ws/${id}`)
     wsRef.current = ws
 
     ws.onopen  = () => setConnected(true)

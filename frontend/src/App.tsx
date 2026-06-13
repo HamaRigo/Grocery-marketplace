@@ -15,17 +15,23 @@ import ReportsPage from './pages/admin/ReportsPage'
 
 function RoleHome() {
   const { role } = useAuth()
-  if (role === 'admin')   return <Navigate to="/admin" replace />
+  if (role === 'admin')   return <Navigate to="/admin"   replace />
   if (role === 'manager') return <Navigate to="/manager" replace />
   return <Navigate to="/stores" replace />
+}
+
+function PublicRoute({ element }: { element: JSX.Element }) {
+  const { user, loading } = useAuth()
+  if (loading) return null
+  return user ? <Navigate to="/" replace /> : element
 }
 
 export default function App() {
   return (
     <Routes>
-      {/* Public entry points */}
-      <Route path="/phone" element={<PhonePage />} />
-      <Route path="/login" element={<LoginPage />} />
+      {/* Public entry points — redirect away if already logged in */}
+      <Route path="/phone" element={<PublicRoute element={<PhonePage />} />} />
+      <Route path="/login" element={<PublicRoute element={<LoginPage />} />} />
 
       {/* Authenticated app */}
       <Route element={<ProtectedRoute />}>

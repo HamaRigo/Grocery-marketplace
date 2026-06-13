@@ -1,57 +1,39 @@
-import { createContext, useContext, useState, type ReactNode } from 'react'
-
-interface JwtPayload {
-  sub: string
-  roles: Array<{ role: string; tenantId: string | null }>
-  exp: number
-}
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
+import { authApi, type SessionUser } from '../api/auth'
 
 interface AuthCtx {
-  token: string | null
-  user: JwtPayload | null
+  user: SessionUser | null
+  loading: boolean
   role: string | null
   tenantId: string | null
-  login: (token: string) => void
-  logout: () => void
+  setUser: (u: SessionUser | null) => void
+  logout: () => Promise<void>
 }
 
 const Ctx = createContext<AuthCtx | null>(null)
 
-function decode(token: string): JwtPayload | null {
-  try {
-    const [, b64] = token.split('.')
-    return JSON.parse(atob(b64.replace(/-/g, '+').replace(/_/g, '/'))) as JwtPayload
-  } catch { return null }
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const stored = localStorage.getItem('token')
-  const storedUser = stored ? decode(stored) : null
+  const [user, setUser]       = useState<SessionUser | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  const [token, setToken] = useState<string | null>(
-    storedUser && storedUser.exp * 1000 > Date.now() ? stored : null
-  )
-  const [user, setUser] = useState<JwtPayload | null>(
-    token ? storedUser : null
-  )
+  // Check existing session on mount (e.g. page refresh).
+  useEffect(() => {
+    authApi.me()
+      .then(setUser)
+      .catch(() => setUser(null))
+      .finally(() => setLoading(false))
+  }, [])
 
-  const login = (t: string) => {
-    localStorage.setItem('token', t)
-    setToken(t)
-    setUser(decode(t))
-  }
-
-  const logout = () => {
-    localStorage.removeItem('token')
-    setToken(null)
+  const logout = async () => {
+    await authApi.logout().catch(() => null)
     setUser(null)
   }
 
-  const role = user?.roles[0]?.role ?? null
+  const role     = user?.roles[0]?.role ?? null
   const tenantId = user?.roles.find(r => r.tenantId != null)?.tenantId ?? null
 
   return (
-    <Ctx.Provider value={{ token, user, role, tenantId, login, logout }}>
+    <Ctx.Provider value={{ user, loading, role, tenantId, setUser, logout }}>
       {children}
     </Ctx.Provider>
   )
