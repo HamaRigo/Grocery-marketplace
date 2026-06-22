@@ -26,6 +26,13 @@ export default function RiderPage() {
     refetchInterval: 8_000,
   })
 
+  const { data: earnings } = useQuery({
+    queryKey: ['rider-earnings', rider?.id],
+    queryFn: () => fulfillmentApi.earnings(7),
+    enabled: !!rider,
+    staleTime: 60_000,
+  })
+
   const { mutate: toggleStatus, isPending: togglingStatus } = useMutation({
     mutationFn: () => {
       const next = rider!.status === 'online' ? 'offline' : 'online'
@@ -90,6 +97,25 @@ export default function RiderPage() {
         </button>
       </div>
 
+      {/* Earnings dashboard */}
+      <div className="bg-white rounded-2xl border shadow-sm p-5">
+        <h2 className="font-semibold text-gray-700 mb-3 text-sm uppercase tracking-wide">
+          Earnings — last {earnings?.days ?? 7} days
+        </h2>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-green-50 rounded-xl p-4 text-center">
+            <p className="text-3xl font-bold text-green-700">{earnings?.deliveries ?? '—'}</p>
+            <p className="text-xs text-gray-500 mt-1">Deliveries</p>
+          </div>
+          <div className="bg-green-50 rounded-xl p-4 text-center">
+            <p className="text-3xl font-bold text-green-700">
+              {earnings?.totalMinor != null ? `$${(earnings.totalMinor / 100).toFixed(0)}` : '—'}
+            </p>
+            <p className="text-xs text-gray-500 mt-1">Est. earnings</p>
+          </div>
+        </div>
+      </div>
+
       {/* Active job */}
       {activeJob && (
         <div className="bg-green-50 border border-green-200 rounded-2xl p-5">
@@ -109,7 +135,6 @@ export default function RiderPage() {
         </div>
       )}
 
-      {/* No active job */}
       {!activeJob && rider.status === 'online' && (
         <div className="bg-white border border-dashed border-gray-300 rounded-2xl p-8 text-center">
           <p className="text-3xl mb-2">🟢</p>
@@ -142,9 +167,7 @@ export default function RiderPage() {
         </div>
       )}
 
-      {jobsLoading && (
-        <p className="text-center text-sm text-gray-400">Loading jobs…</p>
-      )}
+      {jobsLoading && <p className="text-center text-sm text-gray-400">Loading jobs…</p>}
     </div>
   )
 }

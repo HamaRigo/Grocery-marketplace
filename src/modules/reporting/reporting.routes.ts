@@ -2,7 +2,6 @@ import { FastifyPluginAsync } from 'fastify'
 import { ReportingService } from './reporting.service'
 
 export const reportingRoutes: FastifyPluginAsync = async (app) => {
-  // All routes require authentication (admin in production; open for MVP)
   app.get('/overview', { onRequest: [app.authenticate] }, async () =>
     ReportingService.overview()
   )
@@ -15,10 +14,22 @@ export const reportingRoutes: FastifyPluginAsync = async (app) => {
     ReportingService.storeRatings((req.params as any).id)
   )
 
-  // GET /reports/revenue?from=2026-01-01&to=2026-06-30
   app.get('/revenue', { onRequest: [app.authenticate] }, async (req, reply) => {
     const { from, to } = req.query as any
     if (!from || !to) return reply.code(400).send({ error: 'from and to are required (ISO dates)' })
     return ReportingService.revenueOverTime(from, to)
+  })
+
+  // GET /reports/prep-time?tenantId=<uuid>  (optional filter)
+  app.get('/prep-time', { onRequest: [app.authenticate] }, async (req) => {
+    const { tenantId } = req.query as any
+    return ReportingService.avgPrepTimeMinutes(tenantId)
+  })
+
+  // GET /reports/rider-earnings?riderId=<uuid>&days=7
+  app.get('/rider-earnings', { onRequest: [app.authenticate] }, async (req, reply) => {
+    const { riderId, days } = req.query as any
+    if (!riderId) return reply.code(400).send({ error: 'riderId is required' })
+    return ReportingService.riderEarnings(riderId, days ? Number(days) : 7)
   })
 }

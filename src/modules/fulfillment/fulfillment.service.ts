@@ -1,8 +1,8 @@
 import { randomUUID } from 'crypto'
-import { and, eq, isNull } from 'drizzle-orm'
+import { and, eq, isNull, sql } from 'drizzle-orm'
 import { db } from '../../platform/db'
 import { emit, Events } from '../../platform/events'
-import { deliveryJobs, riders, stores, payments } from '../../db/schema'
+import { deliveryJobs, riders, stores, payments, reviews } from '../../db/schema'
 
 export const FulfillmentService = {
   async createJob(tenantId: string, orderId: string) {
@@ -15,17 +15,34 @@ export const FulfillmentService = {
     const [store] = await db.select().from(stores).where(eq(stores.id, tenantId))
     if (!store) return
 
-    let rider = null
+    // Rank available riders by avg rating (higher is better; unrated defaults to 5.0)
+    const ratingSubq = db.select({
+      riderId:   deliveryJobs.riderId,
+      avgRating: sql<number>`coalesce(avg(${reviews.riderRating}), 5)`.as('avg_rating'),
+    })
+    .from(deliveryJobs)
+    .leftJoin(reviews, eq(reviews.orderId, deliveryJobs.orderId))
+    .where(sql`${deliveryJobs.riderId} is not null`)
+    .groupBy(deliveryJobs.riderId)
+    .as('ratings')
+
+    const rankedRiders = (cond: any) =>
+      db.select({ id: riders.id })
+        .from(riders)
+        .leftJoin(ratingSubq, sql`ratings.rider_id = ${riders.id}`)
+        .where(cond)
+        .orderBy(sql`coalesce(ratings.avg_rating, 5) desc`)
+        .limit(1)
+
+    let rider: { id: string } | null = null
 
     if (store.dispatchPolicy !== 'POOL_ONLY') {
-      const [own] = await db.select().from(riders)
-        .where(and(eq(riders.ownedByTenantId, tenantId), eq(riders.status, 'online')))
+      const [own] = await rankedRiders(and(eq(riders.ownedByTenantId, tenantId), eq(riders.status, 'online')))
       rider = own ?? null
     }
 
     if (!rider && store.dispatchPolicy !== 'OWN_ONLY') {
-      const [pool] = await db.select().from(riders)
-        .where(and(isNull(riders.ownedByTenantId), eq(riders.status, 'online')))
+      const [pool] = await rankedRiders(and(isNull(riders.ownedByTenantId), eq(riders.status, 'online')))
       rider = pool ?? null
     }
 

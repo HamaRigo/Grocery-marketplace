@@ -28,4 +28,6 @@ export const fulfillmentApi = {
   deliver:   (jobId: string)                       => post<{ ok: boolean }>(`/fulfillment/jobs/${jobId}/deliver`),
   ping:      (orderId: string, lat: number, lng: number) =>
     post<void>('/tracking/ping', { orderId, lat, lng }),
+  earnings:  (days = 7) =>
+    get<{ deliveries: number; totalMinor: number; days: number }>(`/fulfillment/earnings?days=${days}`),
 }
