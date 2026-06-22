@@ -53,4 +53,42 @@ export const tenantRoutes: FastifyPluginAsync = async (app) => {
   app.post('/:id/suspend', { onRequest: [onlyRole('admin')] }, async (req) =>
     TenantService.suspend((req.params as any).id)
   )
+
+  app.put('/:id/commission', { onRequest: [onlyRole('admin')] }, async (req, reply) => {
+    const { commissionBps } = req.body as any
+    if (typeof commissionBps !== 'number' || commissionBps < 0 || commissionBps > 10000)
+      return reply.code(400).send({ error: 'commissionBps must be 0–10000' })
+    return TenantService.updateCommission((req.params as any).id, commissionBps)
+  })
+
+  // ── Favorites (authenticated customer) ───────────────────────────────────
+  app.get('/favorites', { onRequest: [authenticated] }, async (req) => {
+    const session = (req as any).sessionUser
+    const { db } = await import('../../platform/db')
+    const { favorites, stores } = await import('../../db/schema')
+    const { eq } = await import('drizzle-orm')
+    return db.select({ store: stores })
+      .from(favorites)
+      .leftJoin(stores, eq(stores.id, favorites.storeId))
+      .where(eq(favorites.userId, session.userId))
+  })
+
+  app.post('/:id/favorite', { onRequest: [authenticated] }, async (req, reply) => {
+    const session = (req as any).sessionUser
+    const storeId = (req.params as any).id
+    const { db } = await import('../../platform/db')
+    const { favorites } = await import('../../db/schema')
+    await db.insert(favorites).values({ userId: session.userId, storeId }).onConflictDoNothing()
+    return reply.code(201).send({ ok: true })
+  })
+
+  app.delete('/:id/favorite', { onRequest: [authenticated] }, async (req, reply) => {
+    const session = (req as any).sessionUser
+    const storeId = (req.params as any).id
+    const { db } = await import('../../platform/db')
+    const { favorites } = await import('../../db/schema')
+    const { and, eq } = await import('drizzle-orm')
+    await db.delete(favorites).where(and(eq(favorites.userId, session.userId), eq(favorites.storeId, storeId)))
+    return reply.send({ ok: true })
+  })
 }

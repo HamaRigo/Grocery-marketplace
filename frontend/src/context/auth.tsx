@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useMemo, useCallback, type ReactNode } from 'react'
 import { authApi, type SessionUser } from '../api/auth'
 
 interface AuthCtx {
@@ -24,19 +24,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setLoading(false))
   }, [])
 
-  const logout = async () => {
+  // Stable reference — doesn't change between renders
+  const logout = useCallback(async () => {
     await authApi.logout().catch(() => null)
     setUser(null)
-  }
+  }, [])
 
-  const role     = user?.roles[0]?.role ?? null
-  const tenantId = user?.roles.find(r => r.tenantId != null)?.tenantId ?? null
+  // Derived values memoized so they only recompute when user changes
+  const role     = useMemo(() => user?.roles[0]?.role ?? null, [user])
+  const tenantId = useMemo(() => user?.roles.find(r => r.tenantId != null)?.tenantId ?? null, [user])
 
-  return (
-    <Ctx.Provider value={{ user, loading, role, tenantId, setUser, logout }}>
-      {children}
-    </Ctx.Provider>
+  // Memoized context value prevents all consumers from re-rendering on unrelated state changes
+  const ctxValue = useMemo(
+    () => ({ user, loading, role, tenantId, setUser, logout }),
+    [user, loading, role, tenantId, logout]
   )
+
+  return <Ctx.Provider value={ctxValue}>{children}</Ctx.Provider>
 }
 
 export function useAuth() {

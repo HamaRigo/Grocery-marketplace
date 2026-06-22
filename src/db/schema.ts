@@ -29,7 +29,9 @@ export const userRoles = pgTable('user_roles', {
   userId:   uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   role:     roleEnum('role').notNull(),
   tenantId: uuid('tenant_id'),
-})
+}, t => ({
+  userIdx: index('user_roles_user_idx').on(t.userId),
+}))
 
 // ─── Tenant ───────────────────────────────────────────────────────────────────
 
@@ -82,12 +84,15 @@ export const products = pgTable('products', {
 // ─── Inventory ────────────────────────────────────────────────────────────────
 
 export const inventory = pgTable('inventory', {
-  id:        uuid('id').primaryKey().defaultRandom(),
-  tenantId:  uuid('tenant_id').notNull(),
-  productId: uuid('product_id').notNull().references(() => products.id),
-  onHand:    integer('on_hand').default(0).notNull(),
-  reserved:  integer('reserved').default(0).notNull(),
-})
+  id:                uuid('id').primaryKey().defaultRandom(),
+  tenantId:          uuid('tenant_id').notNull(),
+  productId:         uuid('product_id').notNull().references(() => products.id),
+  onHand:            integer('on_hand').default(0).notNull(),
+  reserved:          integer('reserved').default(0).notNull(),
+  lowStockThreshold: integer('low_stock_threshold'),              // null = no alert
+}, t => ({
+  tenantProductUq: index('inventory_tenant_product_idx').on(t.tenantId, t.productId),
+}))
 
 export const stockReservations = pgTable('stock_reservations', {
   id:        uuid('id').primaryKey().defaultRandom(),
@@ -96,25 +101,33 @@ export const stockReservations = pgTable('stock_reservations', {
   productId: uuid('product_id').notNull(),
   qty:       integer('qty').notNull(),
   expiresAt: timestamp('expires_at').notNull(),
-})
+}, t => ({
+  orderIdx:   index('reservations_order_idx').on(t.orderId),
+  expiryIdx:  index('reservations_expiry_idx').on(t.expiresAt),
+}))
 
 // ─── Ordering ─────────────────────────────────────────────────────────────────
 
 export const orders = pgTable('orders', {
   id:               uuid('id').primaryKey().defaultRandom(),
   tenantId:         uuid('tenant_id').notNull().references(() => stores.id),
-  customerId:       uuid('customer_id').notNull().references(() => users.id),
+  customerId:       uuid('customer_id').references(() => users.id),          // null for guest curbside
   status:           orderStatusEnum('status').default('placed').notNull(),
+  fulfillmentType:  text('fulfillment_type').default('delivery').notNull(),  // 'delivery' | 'curbside'
+  curbsideName:     text('curbside_name'),
+  curbsideVehicle:  jsonb('curbside_vehicle'),                               // { make, model, color, plate? }
+  paymentMethod:    text('payment_method'),                                  // 'cash' | 'card' | 'online'
+  checkedIn:        boolean('checked_in').default(false).notNull(),
   subtotalMinor:    integer('subtotal_minor').notNull(),
   deliveryFeeMinor: integer('delivery_fee_minor').default(0).notNull(),
   totalMinor:       integer('total_minor').notNull(),
   currency:         text('currency').default('USD').notNull(),
-  addressGeo:       jsonb('address_geo').notNull(),
+  addressGeo:       jsonb('address_geo'),                                    // null for curbside
+  scheduledSlotId:  uuid('scheduled_slot_id'),                                          // null for ASAP orders
   placedAt:         timestamp('placed_at').defaultNow().notNull(),
 }, t => ({
-  tenantIdx:   index('orders_tenant_idx').on(t.tenantId),
-  customerIdx: index('orders_customer_idx').on(t.customerId),
-  statusIdx:   index('orders_status_idx').on(t.status),
+  tenantStatusIdx: index('orders_tenant_status_idx').on(t.tenantId, t.status, t.placedAt), // composite for manager queue
+  customerIdx:     index('orders_customer_idx').on(t.customerId),
 }))
 
 export const orderLines = pgTable('order_lines', {
@@ -124,7 +137,9 @@ export const orderLines = pgTable('order_lines', {
   nameSnapshot:   text('name_snapshot').notNull(),
   unitPriceMinor: integer('unit_price_minor').notNull(),
   qty:            integer('qty').notNull(),
-})
+}, t => ({
+  orderIdx: index('order_lines_order_idx').on(t.orderId),
+}))
 
 export const orderStatusHistory = pgTable('order_status_history', {
   id:      uuid('id').primaryKey().defaultRandom(),
@@ -145,7 +160,9 @@ export const payments = pgTable('payments', {
   amountMinor: integer('amount_minor').notNull(),
   status:      paymentStatusEnum('status').notNull(),
   createdAt:   timestamp('created_at').defaultNow().notNull(),
-})
+}, t => ({
+  orderIdx: index('payments_order_idx').on(t.orderId),
+}))
 
 // ─── Fulfillment ──────────────────────────────────────────────────────────────
 
@@ -166,7 +183,10 @@ export const deliveryJobs = pgTable('delivery_jobs', {
   assignedAt:  timestamp('assigned_at'),
   pickedUpAt:  timestamp('picked_up_at'),
   deliveredAt: timestamp('delivered_at'),
-})
+}, t => ({
+  riderIdx: index('delivery_jobs_rider_idx').on(t.riderId),
+  orderIdx: index('delivery_jobs_order_idx').on(t.orderId),
+}))
 
 // ─── Reviews ──────────────────────────────────────────────────────────────────
 
@@ -219,4 +239,31 @@ export const outbox = pgTable('outbox', {
   payload:     jsonb('payload').notNull(),
   occurredAt:  timestamp('occurred_at').defaultNow().notNull(),
   publishedAt: timestamp('published_at'),
-})
+}, t => ({
+  unpublishedIdx: index('outbox_unpublished_idx').on(t.publishedAt, t.occurredAt),
+}))
+
+// ─── Favorites ────────────────────────────────────────────────────────────────
+
+export const favorites = pgTable('favorites', {
+  id:        uuid('id').primaryKey().defaultRandom(),
+  userId:    uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  storeId:   uuid('store_id').notNull().references(() => stores.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, t => ({
+  userStoreIdx: index('favorites_user_store_idx').on(t.userId, t.storeId),
+}))
+
+// ─── Scheduled Delivery ───────────────────────────────────────────────────────
+
+export const deliverySlots = pgTable('delivery_slots', {
+  id:          uuid('id').primaryKey().defaultRandom(),
+  tenantId:    uuid('tenant_id').notNull().references(() => stores.id, { onDelete: 'cascade' }),
+  date:        text('date').notNull(),       // 'YYYY-MM-DD'
+  startTime:   text('start_time').notNull(), // 'HH:MM'
+  endTime:     text('end_time').notNull(),   // 'HH:MM'
+  capacity:    integer('capacity').default(10).notNull(),
+  bookedCount: integer('booked_count').default(0).notNull(),
+}, t => ({
+  tenantDateIdx: index('slots_tenant_date_idx').on(t.tenantId, t.date),
+}))

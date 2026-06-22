@@ -1,0 +1,16 @@
+{
+  "name": "Bakala Shop",
+  "short_name": "Bakala",
+  "description": "Your local grocery marketplace",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f9fafb",
+  "theme_color": "#16a34a",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "categories": ["shopping", "food"],
+  "screenshots": []
+}

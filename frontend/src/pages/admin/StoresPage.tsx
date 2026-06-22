@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { storesApi, type Store } from '../../api/stores'
@@ -5,6 +6,7 @@ import Badge from '../../components/Badge'
 
 export default function AdminStoresPage() {
   const qc = useQueryClient()
+  const [editingCommission, setEditingCommission] = useState<{ id: string; value: string } | null>(null)
 
   const { data: stores, isLoading } = useQuery({
     queryKey: ['stores-admin'],
@@ -19,6 +21,15 @@ export default function AdminStoresPage() {
   const { mutate: suspend } = useMutation({
     mutationFn: (id: string) => storesApi.suspend(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['stores-admin'] }),
+  })
+
+  const { mutate: saveCommission } = useMutation({
+    mutationFn: ({ id, bps }: { id: string; bps: number }) =>
+      storesApi.updateCommission(id, bps),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['stores-admin'] })
+      setEditingCommission(null)
+    },
   })
 
   return (
@@ -52,7 +63,46 @@ export default function AdminStoresPage() {
                   <p className="text-xs text-gray-400">{store.id.slice(0, 8)}…</p>
                 </td>
                 <td className="px-4 py-3 text-gray-600">{store.dispatchPolicy}</td>
-                <td className="px-4 py-3 text-gray-600">{store.commissionBps / 100}%</td>
+                <td className="px-4 py-3">
+                  {editingCommission?.id === store.id ? (
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="number" min={0} max={100} step={0.1}
+                        value={editingCommission.value}
+                        onChange={e => setEditingCommission({ id: store.id, value: e.target.value })}
+                        className="border rounded px-2 py-1 text-xs w-16"
+                        autoFocus
+                      />
+                      <span className="text-xs text-gray-500">%</span>
+                      <button
+                        onClick={() => saveCommission({
+                          id: store.id,
+                          bps: Math.round(Number(editingCommission.value) * 100),
+                        })}
+                        className="text-xs text-green-600 hover:underline ml-1"
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={() => setEditingCommission(null)}
+                        className="text-xs text-gray-400 hover:underline"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setEditingCommission({
+                        id: store.id,
+                        value: String(store.commissionBps / 100),
+                      })}
+                      className="text-gray-700 hover:text-indigo-600 hover:underline"
+                      title="Click to edit"
+                    >
+                      {store.commissionBps / 100}%
+                    </button>
+                  )}
+                </td>
                 <td className="px-4 py-3"><Badge status={store.status} /></td>
                 <td className="px-4 py-3 text-right space-x-2">
                   {store.status === 'pending' && (

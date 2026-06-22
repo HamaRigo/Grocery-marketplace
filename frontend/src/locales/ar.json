@@ -1,0 +1,75 @@
+{
+  "nav": {
+    "stores": "المتاجر",
+    "myOrders": "طلباتي",
+    "orderQueue": "قائمة الطلبات",
+    "catalog": "المنتجات",
+    "storesAdmin": "المتاجر",
+    "reports": "التقارير",
+    "myDeliveries": "توصيلاتي",
+    "logout": "تسجيل الخروج",
+    "slots": "المواعيد"
+  },
+  "notifications": {
+    "title": "الإشعارات",
+    "markRead": "تعليم الكل كمقروء",
+    "empty": "لا توجد إشعارات جديدة"
+  },
+  "stores": {
+    "title": "المتاجر",
+    "favoritesOnly": "المفضلة فقط",
+    "searchPlaceholder": "البحث عن متجر…",
+    "curbside": "استلام جانبي",
+    "shop": "تسوق",
+    "noStores": "لا توجد متاجر متاحة بالقرب منك."
+  },
+  "cart": {
+    "title": "سلة التسوق",
+    "empty": "السلة فارغة.",
+    "total": "المجموع",
+    "deliveryAddress": "عنوان التوصيل",
+    "addressPlaceholder": "123 شارع الرئيسي، المدينة",
+    "scheduleDelivery": "جدولة التوصيل (اختياري)",
+    "selectSlot": "اختر موعداً",
+    "noSlots": "لا توجد مواعيد متاحة لهذا التاريخ.",
+    "placeOrder": "تأكيد الطلب",
+    "placingOrder": "جارٍ الطلب…"
+  },
+  "orders": {
+    "title": "طلباتي",
+    "loading": "جارٍ التحميل…",
+    "empty": "لا توجد طلبات بعد.",
+    "track": "تتبع",
+    "review": "تقييم",
+    "cancel": "إلغاء",
+    "orderAgain": "اطلب مجدداً",
+    "adding": "جارٍ الإضافة…"
+  },
+  "catalog": {
+    "title": "المنتجات",
+    "addProduct": "+ إضافة منتج",
+    "importCsv": "استيراد CSV",
+    "noProducts": "لا توجد منتجات بعد.",
+    "editProduct": "تعديل المنتج",
+    "newProduct": "منتج جديد",
+    "name": "الاسم",
+    "description": "الوصف",
+    "price": "السعر ($)",
+    "save": "حفظ",
+    "saving": "جارٍ الحفظ…",
+    "cancel": "إلغاء",
+    "edit": "تعديل",
+    "remove": "حذف",
+    "stock": "المخزون",
+    "onHand": "الكمية المتوفرة",
+    "lowStockThreshold": "حد تنبيه المخزون المنخفض",
+    "lowStockHint": "يُطلق التنبيه عند وصول الكمية المتاحة لهذا المستوى.",
+    "csvHelp": "أعمدة CSV: الاسم، الوصف، السعر (مثال: 2.99)، معرّف الفئة (اختياري)"
+  },
+  "common": {
+    "loading": "جارٍ التحميل…",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "close": "إغلاق"
+  }
+}

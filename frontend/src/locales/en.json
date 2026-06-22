@@ -1,0 +1,74 @@
+{
+  "nav": {
+    "stores": "Stores",
+    "myOrders": "My Orders",
+    "orderQueue": "Order Queue",
+    "catalog": "Catalog",
+    "storesAdmin": "Stores",
+    "reports": "Reports",
+    "myDeliveries": "My Deliveries",
+    "logout": "Logout"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markRead": "Mark all read",
+    "empty": "No new notifications"
+  },
+  "stores": {
+    "title": "Stores",
+    "favoritesOnly": "Favorites only",
+    "searchPlaceholder": "Search stores…",
+    "curbside": "Curbside",
+    "shop": "Shop",
+    "noStores": "No stores available near you."
+  },
+  "cart": {
+    "title": "Your Cart",
+    "empty": "Cart is empty.",
+    "total": "Total",
+    "deliveryAddress": "Delivery address",
+    "addressPlaceholder": "123 Main St, City",
+    "scheduleDelivery": "Schedule delivery (optional)",
+    "selectSlot": "Pick a time slot",
+    "noSlots": "No slots available for this date.",
+    "placeOrder": "Place order",
+    "placingOrder": "Placing order…"
+  },
+  "orders": {
+    "title": "My Orders",
+    "loading": "Loading…",
+    "empty": "No orders yet.",
+    "track": "Track",
+    "review": "Review",
+    "cancel": "Cancel",
+    "orderAgain": "Order again",
+    "adding": "Adding…"
+  },
+  "catalog": {
+    "title": "Catalog",
+    "addProduct": "+ Add product",
+    "importCsv": "Import CSV",
+    "noProducts": "No products yet.",
+    "editProduct": "Edit product",
+    "newProduct": "New product",
+    "name": "Name",
+    "description": "Description",
+    "price": "Price ($)",
+    "save": "Save",
+    "saving": "Saving…",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "remove": "Remove",
+    "stock": "Stock",
+    "onHand": "On hand",
+    "lowStockThreshold": "Low-stock alert threshold",
+    "lowStockHint": "Alert fires when available qty falls to this level.",
+    "csvHelp": "CSV columns: name, description, price (e.g. 2.99), categoryId (optional)"
+  },
+  "common": {
+    "loading": "Loading…",
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close"
+  }
+}

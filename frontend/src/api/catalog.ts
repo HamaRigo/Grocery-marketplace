@@ -12,8 +12,14 @@ export interface Product {
 }
 
 export const catalogApi = {
-  listProducts:   (tenantId: string, q?: string) =>
-    get<Product[]>(`/catalog/${tenantId}/products${q ? `?q=${encodeURIComponent(q)}` : ''}`),
+  listProducts: (tenantId: string, q?: string, categoryId?: string, maxPrice?: number) => {
+    const params = new URLSearchParams()
+    if (q)          params.set('q', q)
+    if (categoryId) params.set('categoryId', categoryId)
+    if (maxPrice)   params.set('maxPrice', String(maxPrice))
+    const qs = params.toString()
+    return get<Product[]>(`/catalog/${tenantId}/products${qs ? `?${qs}` : ''}`)
+  },
   listCategories: (tenantId: string) =>
     get<Category[]>(`/catalog/${tenantId}/categories`),
   createProduct:  (tenantId: string, body: Omit<Product, 'id' | 'tenantId' | 'status'>) =>
@@ -22,4 +28,11 @@ export const catalogApi = {
     put<Product>(`/catalog/${tenantId}/products/${id}`, body),
   deleteProduct:  (tenantId: string, id: string) =>
     del<void>(`/catalog/${tenantId}/products/${id}`),
+  importCsv: (tenantId: string, csv: string) =>
+    fetch(`/catalog/${tenantId}/import`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      credentials: 'include',
+      body: csv,
+    }).then(r => r.json() as Promise<{ imported: number; products: Product[] }>),
 }

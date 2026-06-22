@@ -46,4 +46,14 @@ export const fulfillmentRoutes: FastifyPluginAsync = async (app) => {
     const { riderId, status } = req.body as any
     return FulfillmentService.setAvailability(riderId, status)
   })
+
+  // Rider earnings — proxies to reporting service
+  app.get('/earnings', { onRequest: [app.authenticate] }, async (req, reply) => {
+    const session = (req as any).sessionUser
+    const rider = await FulfillmentService.getRiderByUserId(session.userId)
+    if (!rider) return reply.code(404).send({ error: 'No rider record' })
+    const { ReportingService } = await import('../reporting/reporting.service')
+    const { days } = req.query as any
+    return ReportingService.riderEarnings(rider.id, days ? Number(days) : 7)
+  })
 }

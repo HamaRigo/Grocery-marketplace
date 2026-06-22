@@ -9,18 +9,32 @@ export default function StorePage() {
   const { id } = useParams<{ id: string }>()
   const qc = useQueryClient()
   const [q, setQ] = useState('')
+  const [categoryId, setCategoryId] = useState('')
+  const [maxPrice, setMaxPrice] = useState('')
   const [added, setAdded] = useState<string | null>(null)
 
   const { data: store } = useQuery({
     queryKey: ['store', id],
     queryFn: () => storesApi.get(id!),
     enabled: !!id,
+    staleTime: 5 * 60_000,
+  })
+
+  const { data: categories } = useQuery({
+    queryKey: ['categories', id],
+    queryFn: () => catalogApi.listCategories(id!),
+    enabled: !!id,
+    staleTime: 10 * 60_000,
   })
 
   const { data: products, isLoading } = useQuery({
-    queryKey: ['products', id, q],
-    queryFn: () => catalogApi.listProducts(id!, q || undefined),
+    queryKey: ['products', id, q, categoryId, maxPrice],
+    queryFn: () => catalogApi.listProducts(
+      id!, q || undefined, categoryId || undefined,
+      maxPrice ? Number(maxPrice) : undefined,
+    ),
     enabled: !!id,
+    staleTime: 60_000,
   })
 
   const { mutate: addToCart } = useMutation({
@@ -38,9 +52,17 @@ export default function StorePage() {
     },
   })
 
+  function clearFilters() {
+    setQ('')
+    setCategoryId('')
+    setMaxPrice('')
+  }
+
+  const hasFilters = q || categoryId || maxPrice
+
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">{store?.name}</h1>
         </div>
@@ -50,11 +72,40 @@ export default function StorePage() {
         </Link>
       </div>
 
-      <input
-        value={q} onChange={e => setQ(e.target.value)}
-        placeholder="Search products…"
-        className="mb-6 w-full border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-      />
+      {/* Filters */}
+      <div className="flex flex-wrap gap-3 mb-5">
+        <input
+          value={q} onChange={e => setQ(e.target.value)}
+          placeholder="Search products…"
+          className="border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 flex-1 min-w-40"
+        />
+        {categories && categories.length > 0 && (
+          <select
+            value={categoryId} onChange={e => setCategoryId(e.target.value)}
+            className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+          >
+            <option value="">All categories</option>
+            {categories.map(c => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+        )}
+        <div className="flex items-center gap-1">
+          <span className="text-sm text-gray-500">Max $</span>
+          <input
+            type="number" min={0} value={maxPrice}
+            onChange={e => setMaxPrice(e.target.value)}
+            placeholder="Any"
+            className="border rounded-lg px-3 py-2 text-sm w-24 focus:outline-none focus:ring-2 focus:ring-green-500"
+          />
+        </div>
+        {hasFilters && (
+          <button onClick={clearFilters}
+            className="text-sm text-gray-500 hover:text-gray-700 underline">
+            Clear
+          </button>
+        )}
+      </div>
 
       {isLoading && <p className="text-gray-500">Loading products…</p>}
 

@@ -1,26 +1,28 @@
-import { and, eq, lt, sql } from 'drizzle-orm'
+import { sql } from 'drizzle-orm'
 import { db } from '../platform/db'
-import { stockReservations, inventory } from '../db/schema'
 
 const INTERVAL_MS = 60_000 // every minute
 
 async function tick() {
-  const expired = await db.select().from(stockReservations)
-    .where(lt(stockReservations.expiresAt, new Date()))
-    .limit(200)
+  // Single atomic CTE: delete expired rows and release their inventory in one statement.
+  // Replaces the previous N-transaction loop (was: 2 queries × N expired rows).
+  const result = await db.execute(sql`
+    WITH expired AS (
+      DELETE FROM stock_reservations
+      WHERE id IN (
+        SELECT id FROM stock_reservations WHERE expires_at < NOW() LIMIT 200
+      )
+      RETURNING tenant_id, product_id, qty
+    )
+    UPDATE inventory i
+    SET reserved = GREATEST(0, i.reserved - e.qty)
+    FROM expired e
+    WHERE i.tenant_id = e.tenant_id
+      AND i.product_id = e.product_id
+  `)
 
-  if (!expired.length) return
-
-  for (const r of expired) {
-    await db.transaction(async (tx) => {
-      await tx.update(inventory)
-        .set({ reserved: sql`greatest(0, ${inventory.reserved} - ${r.qty})` })
-        .where(and(eq(inventory.tenantId, r.tenantId), eq(inventory.productId, r.productId)))
-      await tx.delete(stockReservations).where(eq(stockReservations.id, r.id))
-    }).catch(err => console.error('[ReservationExpiry] tx error:', err.message))
-  }
-
-  console.log(`[ReservationExpiry] released ${expired.length} expired reservation(s)`)
+  const count = result.length ?? 0
+  if (count > 0) console.log(`[ReservationExpiry] released ${count} expired reservation(s)`)
 }
 
 export function startReservationExpiryWorker(): void {

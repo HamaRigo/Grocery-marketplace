@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto'
-import { eq, and, like } from 'drizzle-orm'
+import { eq, and, like, sql } from 'drizzle-orm'
 import { db } from '../../platform/db'
 import { redis } from '../../platform/redis'
 import { emit, Events } from '../../platform/events'
@@ -8,15 +8,19 @@ import { products, categories } from '../../db/schema'
 const CACHE_TTL = 300 // 5 min
 
 export const CatalogService = {
-  async listProducts(tenantId: string, search?: string) {
-    if (!search) {
-      const cached = await redis.get(`catalog:${tenantId}`)
+  async listProducts(tenantId: string, search?: string, categoryId?: string, maxPriceMinor?: number) {
+    const cacheKey = `catalog:${tenantId}`
+    if (!search && !categoryId && !maxPriceMinor) {
+      const cached = await redis.get(cacheKey)
       if (cached) return JSON.parse(cached)
     }
     const conditions = [eq(products.tenantId, tenantId), eq(products.status, 'active')]
-    if (search) conditions.push(like(products.name, `%${search}%`))
+    if (search)        conditions.push(like(products.name, `%${search}%`))
+    if (categoryId)    conditions.push(eq(products.categoryId, categoryId))
+    if (maxPriceMinor) conditions.push(sql`${products.priceMinor} <= ${maxPriceMinor}`)
     const rows = await db.select().from(products).where(and(...conditions))
-    if (!search) await redis.setex(`catalog:${tenantId}`, CACHE_TTL, JSON.stringify(rows))
+    if (!search && !categoryId && !maxPriceMinor)
+      await redis.setex(cacheKey, CACHE_TTL, JSON.stringify(rows))
     return rows
   },
 
