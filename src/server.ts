@@ -14,9 +14,11 @@ import { orderingRoutes }    from './modules/ordering/ordering.routes'
 import { fulfillmentRoutes } from './modules/fulfillment/fulfillment.routes'
 import { trackingRoutes }    from './modules/tracking/tracking.routes'
 import { billingRoutes }     from './modules/billing/billing.routes'
-import { reportingRoutes }   from './modules/reporting/reporting.routes'
-import { healthRoutes }      from './modules/health/health.routes'
-import { discoveryRoutes }   from './modules/discovery/discovery.routes'
+import { reportingRoutes }     from './modules/reporting/reporting.routes'
+import { healthRoutes }         from './modules/health/health.routes'
+import { discoveryRoutes }      from './modules/discovery/discovery.routes'
+import { notificationsRoutes }  from './modules/notifications/notifications.routes'
+import { schedulingRoutes }     from './modules/scheduling/scheduling.routes'
 import { registerListeners }              from './platform/listeners'
 import { registerNotificationListeners }  from './modules/notifications/notifications.service'
 import { registerOutboxWriters }          from './platform/outbox'
@@ -61,9 +63,11 @@ export async function buildServer() {
   await app.register(fulfillmentRoutes, { prefix: '/fulfillment' })
   await app.register(trackingRoutes,    { prefix: '/tracking' })
   await app.register(billingRoutes,     { prefix: '/billing' })
-  await app.register(reportingRoutes,   { prefix: '/reports' })
+  await app.register(reportingRoutes,     { prefix: '/reports' })
   await app.register(healthRoutes)
-  await app.register(discoveryRoutes,   { prefix: '/discovery' })
+  await app.register(discoveryRoutes,     { prefix: '/discovery' })
+  await app.register(notificationsRoutes, { prefix: '/notifications' })
+  await app.register(schedulingRoutes,    { prefix: '/scheduling' })
 
   registerListeners()
   registerNotificationListeners()

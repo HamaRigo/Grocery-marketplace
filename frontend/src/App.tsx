@@ -3,6 +3,7 @@ import { useAuth } from './context/auth'
 import ProtectedRoute from './components/ProtectedRoute'
 import PhonePage from './pages/PhonePage'
 import LoginPage from './pages/LoginPage'
+import CurbsidePage from './pages/customer/CurbsidePage'
 import StoresPage from './pages/customer/StoresPage'
 import StorePage from './pages/customer/StorePage'
 import CartPage from './pages/customer/CartPage'
@@ -10,6 +11,7 @@ import OrdersPage from './pages/customer/OrdersPage'
 import TrackPage from './pages/customer/TrackPage'
 import OrderQueuePage from './pages/manager/OrderQueuePage'
 import CatalogPage from './pages/manager/CatalogPage'
+import SlotsPage from './pages/manager/SlotsPage'
 import AdminStoresPage from './pages/admin/StoresPage'
 import ReportsPage from './pages/admin/ReportsPage'
 import RiderPage from './pages/rider/RiderPage'
@@ -32,6 +34,9 @@ function PublicRoute({ element }: { element: JSX.Element }) {
 export default function App() {
   return (
     <Routes>
+      {/* Fully public — no account required */}
+      <Route path="/curbside/:tenantId" element={<CurbsidePage />} />
+
       {/* Public entry points — redirect away if already logged in */}
       <Route path="/phone" element={<PublicRoute element={<PhonePage />} />} />
       <Route path="/login" element={<PublicRoute element={<LoginPage />} />} />
@@ -48,6 +53,7 @@ export default function App() {
 
         <Route path="/manager"                   element={<OrderQueuePage />} />
         <Route path="/manager/catalog/:tenantId" element={<CatalogPage />} />
+        <Route path="/manager/slots/:tenantId"   element={<SlotsPage />} />
 
         <Route path="/admin"         element={<AdminStoresPage />} />
         <Route path="/admin/reports" element={<ReportsPage />} />

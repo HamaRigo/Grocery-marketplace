@@ -2,7 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 // Proxy all backend routes through Vite so cookies are same-origin.
-const backendRoutes = '^/(auth|stores|catalog|inventory|cart|orders|fulfillment|tracking|billing|reports|health|discovery)'
+const backendRoutes = '^/(auth|stores|catalog|inventory|cart|orders|fulfillment|tracking|billing|reports|health|discovery|notifications|scheduling)'
 
 export default defineConfig({
   plugins: [react()],
