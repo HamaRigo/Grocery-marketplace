@@ -13,8 +13,8 @@ export const inventoryRoutes: FastifyPluginAsync = async (app) => {
 
   app.put('/:tenantId/:productId', { onRequest: [app.authenticate] }, async (req) => {
     const { tenantId, productId } = req.params as any
-    const { onHand } = req.body as any
-    return InventoryService.setStock(tenantId, productId, onHand)
+    const { onHand, lowStockThreshold } = req.body as any
+    return InventoryService.setStock(tenantId, productId, onHand, lowStockThreshold)
   })
 
   app.patch('/:tenantId/:productId/adjust', { onRequest: [app.authenticate] }, async (req, reply) => {
