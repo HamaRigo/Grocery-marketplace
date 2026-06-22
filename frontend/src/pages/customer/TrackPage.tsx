@@ -15,7 +15,10 @@ export default function TrackPage() {
   const { data: order } = useQuery({
     queryKey: ['order', id],
     queryFn: () => ordersApi.get(id!),
-    refetchInterval: 15_000,
+    // Stop HTTP polling while WS is connected — WS delivers live updates;
+    // fall back to 15s polling when disconnected (e.g. network hiccup)
+    refetchInterval: connected ? false : 15_000,
+    staleTime: 10_000,
     enabled: !!id,
   })
 

@@ -1,4 +1,4 @@
-import { eq, isNull } from 'drizzle-orm'
+import { inArray, isNull } from 'drizzle-orm'
 import { db } from './db'
 import { outbox } from '../db/schema'
 import { publishToStream } from './broker'
@@ -13,11 +13,22 @@ export function startOutboxRelay(): void {
         .where(isNull(outbox.publishedAt))
         .limit(BATCH_SIZE)
 
-      for (const row of pending) {
-        await publishToStream(row.eventType, row.payload)
+      if (!pending.length) { setTimeout(tick, POLL_MS); return }
+
+      // Publish all rows; collect IDs of those that succeed
+      const publishedIds: string[] = []
+      await Promise.allSettled(
+        pending.map(async row => {
+          await publishToStream(row.eventType, row.payload)
+          publishedIds.push(row.id)
+        })
+      )
+
+      // Single batch UPDATE instead of one UPDATE per row
+      if (publishedIds.length) {
         await db.update(outbox)
           .set({ publishedAt: new Date() })
-          .where(eq(outbox.id, row.id))
+          .where(inArray(outbox.id, publishedIds))
       }
     } catch (err: any) {
       console.error('[OutboxRelay]', err.message)
