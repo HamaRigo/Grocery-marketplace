@@ -62,4 +62,12 @@ export const TenantService = {
     const [store] = await db.select().from(stores).where(eq(stores.id, storeId))
     return store
   },
+
+  async updateCommission(storeId: string, commissionBps: number) {
+    const [store] = await db.update(stores)
+      .set({ commissionBps })
+      .where(eq(stores.id, storeId))
+      .returning()
+    return store
+  },
 }

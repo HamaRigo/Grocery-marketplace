@@ -1,23 +1,27 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { ordersApi, type Order } from '../../api/orders'
+import { cartApi } from '../../api/cart'
 import Badge from '../../components/Badge'
 
-const TRACKABLE = ['assigned', 'out_for_delivery']
+const TRACKABLE  = ['assigned', 'out_for_delivery']
 const REVIEWABLE = ['delivered']
 const CANCELLABLE = ['placed', 'accepted']
 
 export default function OrdersPage() {
   const qc = useQueryClient()
+  const navigate = useNavigate()
   const [reviewOrderId, setReviewOrderId] = useState<string | null>(null)
   const [rating, setRating] = useState(5)
   const [comment, setComment] = useState('')
+  const [reordering, setReordering] = useState<string | null>(null)
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ['orders-mine'],
     queryFn: () => ordersApi.listMine(),
-    refetchInterval: 10_000,
+    refetchInterval: 30_000,
+    staleTime:       10_000,
   })
 
   const { mutate: cancel } = useMutation({
@@ -34,6 +38,31 @@ export default function OrdersPage() {
       qc.invalidateQueries({ queryKey: ['orders-mine'] })
     },
   })
+
+  async function reorder(order: Order) {
+    if (!order.lines?.length) {
+      // Fetch lines if not embedded
+      const full = await ordersApi.get(order.id)
+      order = full
+    }
+    if (!order.lines?.length || !order.tenantId) return
+    setReordering(order.id)
+    try {
+      await Promise.all(
+        order.lines.map(l =>
+          cartApi.addLine(order.tenantId, {
+            productId:  l.productId,
+            name:       l.name,
+            priceMinor: l.priceMinor,
+            qty:        l.qty,
+          })
+        )
+      )
+      navigate(`/cart/${order.tenantId}`)
+    } finally {
+      setReordering(null)
+    }
+  }
 
   return (
     <div>
@@ -74,6 +103,14 @@ export default function OrdersPage() {
                   Cancel
                 </button>
               )}
+              {/* Repeat last order — works for any completed or active order */}
+              <button
+                onClick={() => reorder(order)}
+                disabled={reordering === order.id}
+                className="px-3 py-1 text-xs bg-green-50 border border-green-400 text-green-700 rounded hover:bg-green-100 disabled:opacity-50"
+              >
+                {reordering === order.id ? 'Adding…' : 'Order again'}
+              </button>
             </div>
           </div>
         ))}
