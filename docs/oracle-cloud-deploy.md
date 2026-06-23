@@ -35,7 +35,9 @@ Full stack (API + frontend + PostgreSQL + Redis + Elasticsearch) at zero cost, f
    - Set **4 OCPUs** and **24 GB memory**
 5. **SSH keys**: paste your public key (`~/.ssh/id_ed25519.pub`) or let OCI generate a pair and download the private key
 6. **Boot volume**: 100 GB is fine (default)
-7. Click **Create** — the VM starts in ~2 minutes
+7. **Startup script** — expand **Advanced Options → Initialization Script**, select **Paste cloud-init script**, and paste the entire contents of `scripts/cloud-init.sh`
+   - The script installs Docker, opens ports, clones the repo, and registers a systemd service that brings the stack up automatically on every reboot
+8. Click **Create** — the VM starts in ~2 minutes
 
 Note the **Public IP address** shown on the instance detail page — you'll need it throughout this guide.
 
@@ -59,66 +61,30 @@ Port 3000 (API) does **not** need to be public — nginx proxies it internally.
 
 ---
 
-## Step 4 — SSH into the VM and bootstrap Docker
+## Step 4 — Watch the startup script run (optional)
+
+The cloud-init script starts automatically on first boot. You can tail its progress:
 
 ```bash
 ssh ubuntu@<YOUR_VM_PUBLIC_IP>
+sudo tail -f /var/log/bakala-init.log
 ```
 
-Run all commands below on the VM.
+When it finishes you will see:
 
-### 4a. System update
-
-```bash
-sudo apt-get update && sudo apt-get upgrade -y
+```
+════════════════════════════════════════════════
+  Bootstrap complete. One manual step remains:
+  ...
+════════════════════════════════════════════════
+==> [2026-06-23T...] Bakala bootstrap finished
 ```
 
-### 4b. Install Docker Engine
-
-```bash
-curl -fsSL https://get.docker.com | sudo sh
-sudo usermod -aG docker ubuntu
-newgrp docker          # reload group without re-logging
-docker --version       # sanity check
-```
-
-### 4c. Install Docker Compose plugin
-
-```bash
-ARCH=$(uname -m)   # aarch64 on ARM
-sudo mkdir -p /usr/local/lib/docker/cli-plugins
-sudo curl -SL \
-  "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-${ARCH}" \
-  -o /usr/local/lib/docker/cli-plugins/docker-compose
-sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
-docker compose version   # should print 2.x.x
-```
-
-### 4d. Open Ubuntu's own firewall
-
-Oracle's iptables rules block ports too. Allow HTTP and HTTPS:
-
-```bash
-sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 80  -j ACCEPT
-sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 443 -j ACCEPT
-sudo netfilter-persistent save
-```
-
-If `netfilter-persistent` is missing:
-```bash
-sudo apt-get install -y iptables-persistent
-sudo netfilter-persistent save
-```
-
-### 4e. Install Git
-
-```bash
-sudo apt-get install -y git
-```
+Everything is installed (Docker, Compose, Git) and the `bakala` systemd service is registered. The stack will now start automatically on every reboot — you never need to SSH in for restarts.
 
 ---
 
-## Step 5 — Clone the repo and configure secrets
+## Step 5 — Configure secrets and start the stack
 
 ```bash
 sudo mkdir -p /opt/bakala-shop
@@ -128,9 +94,11 @@ cd /opt/bakala-shop
 git checkout prod
 ```
 
-### Create the production env file
+### SSH in and create the production env file
 
 ```bash
+ssh ubuntu@<YOUR_VM_PUBLIC_IP>
+cd /opt/bakala-shop
 cp .env.prod.example .env.prod
 nano .env.prod
 ```
@@ -165,17 +133,16 @@ NODE_ENV=production
 
 ---
 
-## Step 6 — Deploy
+## Step 6 — Start the stack
 
 ```bash
-cd /opt/bakala-shop
-./deploy.sh
+sudo systemctl start bakala
 ```
 
-The script will:
+`systemctl` delegates to `docker-compose.prod.yml`, which will:
 1. Build all Docker images (10–15 min on first run)
 2. Start PostgreSQL, Redis, and Elasticsearch
-3. Run database migrations
+3. Run database migrations (one-shot container that exits 0)
 4. Start the API + background services
 5. Start the nginx frontend container
 
@@ -184,7 +151,13 @@ When it finishes, visit **http://\<YOUR_VM_PUBLIC_IP\>** — Bakala Shop is live
 Check service health:
 
 ```bash
+# systemd status
+sudo systemctl status bakala
+
+# container-level status
 docker compose -f docker-compose.prod.yml ps
+
+# live logs
 docker compose -f docker-compose.prod.yml logs -f api frontend
 ```
 
