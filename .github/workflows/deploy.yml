@@ -90,10 +90,10 @@ jobs:
             # Authenticate with GHCR and pull new images
             echo "${{ secrets.GITHUB_TOKEN }}" | \
               docker login ghcr.io -u ${{ github.actor }} --password-stdin
-            docker compose -f docker-compose.prod.yml pull api frontend
+            docker compose -f docker-compose.prod.yml --env-file .env.prod pull api frontend
 
             # Rolling restart — infra stays up; only app containers restart
-            docker compose -f docker-compose.prod.yml up -d \
+            docker compose -f docker-compose.prod.yml --env-file .env.prod up -d \
               --no-deps --remove-orphans \
               migrate api notifications-svc tracking-svc discovery-svc frontend
 

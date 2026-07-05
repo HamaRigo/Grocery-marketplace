@@ -11,10 +11,11 @@
 #
 # What it does:
 #   1. Updates the system and installs Docker + Git
-#   2. Opens ports 80 and 443 in Ubuntu's iptables rules
-#   3. Clones the prod branch to /opt/bakala-shop
-#   4. Installs a systemd service so the Docker stack restarts on every reboot
-#   5. Starts the stack if .env.prod already exists, otherwise prints next steps
+#   2. Raises vm.max_map_count so Elasticsearch can boot
+#   3. Opens ports 80 and 443 in Ubuntu's iptables rules
+#   4. Clones the prod branch to /opt/bakala-shop
+#   5. Installs a systemd service so the Docker stack restarts on every reboot
+#   6. Starts the stack if .env.prod already exists, otherwise prints next steps
 #
 # After the script finishes, SSH in and run:
 #   cp /opt/bakala-shop/.env.prod.example /opt/bakala-shop/.env.prod
@@ -54,7 +55,14 @@ if [ ! -f "$COMPOSE_BIN" ]; then
 fi
 echo "    docker compose $(docker compose version --short)"
 
-# ── 4. Firewall: open ports 80 and 443 ───────────────────────────────────────
+# ── 4. Kernel: raise vm.max_map_count for Elasticsearch ──────────────────────
+# ES 8.x refuses to start below 262144 (Ubuntu defaults to 65530) and fails
+# its bootstrap check, which blocks every service that depends on it.
+echo "vm.max_map_count=262144" > /etc/sysctl.d/99-elasticsearch.conf
+sysctl -w vm.max_map_count=262144
+echo "==> Kernel: vm.max_map_count set to 262144"
+
+# ── 5. Firewall: open ports 80 and 443 ───────────────────────────────────────
 # OCI instances run Ubuntu's iptables on top of the OCI Security List rules.
 # Both layers must allow a port for traffic to reach the container.
 open_port() {
@@ -67,7 +75,7 @@ open_port 443
 netfilter-persistent save
 echo "==> Firewall: ports 80 and 443 open"
 
-# ── 5. Clone / update the repo ────────────────────────────────────────────────
+# ── 6. Clone / update the repo ────────────────────────────────────────────────
 REPO_URL="https://github.com/HamaRigo/Grocery-marketplace.git"
 REPO_DIR="/opt/bakala-shop"
 
@@ -85,7 +93,7 @@ chown -R ubuntu:ubuntu "$REPO_DIR"
 chmod +x "$REPO_DIR/deploy.sh"
 echo "==> Repo ready at $REPO_DIR (branch: prod)"
 
-# ── 6. Systemd service — auto-start on every reboot ──────────────────────────
+# ── 7. Systemd service — auto-start on every reboot ──────────────────────────
 cat > /etc/systemd/system/bakala.service << 'SERVICE'
 [Unit]
 Description=Bakala Shop (Docker Compose)
@@ -99,10 +107,10 @@ RemainAfterExit=yes
 WorkingDirectory=/opt/bakala-shop
 
 # Start: bring the full stack up in detached mode
-ExecStart=/usr/bin/docker compose -f docker-compose.prod.yml up -d
+ExecStart=/usr/bin/docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
 
 # Stop: graceful shutdown (30 s timeout per container)
-ExecStop=/usr/bin/docker compose -f docker-compose.prod.yml down --timeout 30
+ExecStop=/usr/bin/docker compose -f docker-compose.prod.yml --env-file .env.prod down --timeout 30
 
 # If the stack crashes, try restarting after 10 s
 Restart=on-failure
@@ -121,7 +129,7 @@ systemctl daemon-reload
 systemctl enable bakala.service
 echo "==> systemd: bakala.service installed and enabled"
 
-# ── 7. First-run: start the stack only if .env.prod exists ───────────────────
+# ── 8. First-run: start the stack only if .env.prod exists ───────────────────
 ENV_FILE="$REPO_DIR/.env.prod"
 
 if [ -f "$ENV_FILE" ]; then

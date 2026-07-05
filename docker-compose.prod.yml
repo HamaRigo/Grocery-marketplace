@@ -3,6 +3,7 @@ version: '3.9'
 # Shared defaults for Node services
 x-api: &api-base
   build: .
+  image: ghcr.io/hamarigo/grocery-marketplace/api:latest
   env_file: .env.prod
   restart: always
 
@@ -109,6 +110,7 @@ services:
 
   frontend:
     build: ./frontend
+    image: ghcr.io/hamarigo/grocery-marketplace/frontend:latest
     restart: always
     ports:
       - '80:80'
