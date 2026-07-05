@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { catalogApi, type Product } from '../../api/catalog'
 import { inventoryApi, type InventoryRow } from '../../api/inventory'
 import Badge from '../../components/Badge'
+import { formatMinor } from '../../lib/money'
 
 interface ProductForm { name: string; description: string; priceMinor: number }
 const EMPTY: ProductForm = { name: '', description: '', priceMinor: 0 }
@@ -173,7 +174,7 @@ export default function CatalogPage() {
                     {p.description && <p className="text-xs text-gray-500 truncate max-w-xs">{p.description}</p>}
                   </td>
                   <td className="px-4 py-3 font-medium text-green-700">
-                    ${(p.priceMinor / 100).toFixed(2)}
+                    {formatMinor(p.priceMinor)}
                   </td>
                   <td className="px-4 py-3 text-gray-600">
                     <button

@@ -133,7 +133,8 @@ src/
 │   ├── ordering/               checkout saga · state machine · reviews
 │   ├── fulfillment/            riders · dispatch engine · jobs
 │   ├── tracking/               GPS ping · WebSocket fan-out
-│   ├── billing/                commission · subscriptions · refunds
+│   ├── billing/                commission · vendor subscriptions (Stripe) · refunds
+│   ├── payments/                customer PaymentIntents · Stripe webhook dispatcher
 │   ├── reporting/              admin metrics · revenue time-series
 │   ├── discovery/              Elasticsearch geo + text search
 │   └── health/                 GET /health liveness probe
@@ -142,11 +143,13 @@ src/
 │   ├── tracking/               standalone: Fastify + WebSocket + consumer
 │   └── discovery/              standalone: Fastify + ES + consumer
 ├── workers/
-│   └── reservation-expiry.ts   releases expired stock reservations (1 min)
+│   └── reservation-expiry.ts   releases expired reservations; cancels unpaid orders (1 min)
 └── test/
     ├── validate.test.ts
     ├── billing.test.ts
-    └── tenant.test.ts
+    ├── tenant.test.ts
+    ├── payments.test.ts
+    └── subscriptions.test.ts
 ```
 
 ---
@@ -197,16 +200,24 @@ All authenticated routes require `Authorization: Bearer <token>`.
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| POST | `/orders/checkout` | customer | Run checkout saga → order |
-| GET | `/orders/mine?limit&offset` | customer | My orders |
-| GET | `/orders?tenantId&status&limit&offset` | any | Order queue |
+| POST | `/orders/checkout` | customer | Run checkout saga → order in `pending_payment` |
+| GET | `/orders/mine?limit&offset` | customer | My orders (each includes its `payment`) |
+| GET | `/orders?tenantId&status&limit&offset` | any | Order queue (each includes its `payment`) |
+| GET | `/orders/admin?paymentStatus&limit&offset` | admin | All orders + payments, every tenant |
 | GET | `/orders/:id` | any | Order detail + lines |
 | POST | `/orders/:id/accept` | manager | Accept order |
 | POST | `/orders/:id/reject` | manager | Reject order |
 | POST | `/orders/:id/preparing` | manager | Mark preparing |
 | POST | `/orders/:id/ready` | manager | Mark ready (triggers dispatch) |
-| POST | `/orders/:id/cancel` | any | Cancel + compensate |
+| POST | `/orders/:id/cancel` | any | Cancel + compensate (voids the Stripe PaymentIntent) |
 | POST | `/orders/:id/review` | customer | `{ storeRating, riderRating?, comment? }` |
+
+### Payments (Stripe)
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/payments/create-payment-intent` | customer | `{ orderId }` → recomputes the charge from live product prices, returns `{ clientSecret }` |
+| POST | `/payments/webhook` | Stripe signature | Signature-verified, idempotent (`webhook_events` table). Handles `payment_intent.*`, `charge.refunded`, `customer.subscription.*`, `invoice.*` |
 
 ### Fulfillment
 
@@ -232,11 +243,12 @@ All authenticated routes require `Authorization: Bearer <token>`.
 |--------|------|------|-------------|
 | GET | `/billing/settlements?tenantId&from&to` | any | List commission settlements |
 | POST | `/billing/settlements/:id/pay` | any | Mark settlement paid |
-| GET | `/billing/subscriptions/:tenantId` | any | Subscription status |
-| PUT | `/billing/subscriptions/:tenantId` | any | `{ plan }` free/standard/premium |
-| POST | `/billing/subscriptions/:tenantId/charge` | any | Charge monthly fee |
-| DELETE | `/billing/subscriptions/:tenantId` | any | Cancel subscription |
-| POST | `/billing/refund/:orderId` | any | Refund captured payment |
+| GET | `/billing/subscriptions` | admin | All stores' subscriptions |
+| GET | `/billing/subscriptions/:tenantId` | admin / own manager | Subscription status |
+| POST | `/billing/subscriptions/:tenantId/checkout-session` | admin / own manager | Start a Stripe Checkout session for the store's subscription |
+| POST | `/billing/subscriptions/:tenantId/portal-session` | admin / own manager | Open the Stripe Customer Portal (manage/cancel, update card) |
+| PATCH | `/billing/subscriptions/:tenantId/price` | admin | `{ amountMinor, currency }` — set this store's monthly price |
+| POST | `/billing/refund/:orderId` | admin | `{ amountMinor? }` — full refund if omitted, partial otherwise |
 
 ### Reporting
 
@@ -355,6 +367,10 @@ The CI pipeline (`.github/workflows/ci.yml`) runs on every push:
 | `TRACKING_PORT` | `3001` | Standalone tracking service port |
 | `DISCOVERY_PORT` | `3002` | Standalone discovery service port |
 | `NODE_ENV` | `development` | Controls log level |
+| `STRIPE_SECRET_KEY` | — | **Required for payments.** Server-side secret key |
+| `STRIPE_WEBHOOK_SECRET` | — | **Required for payments.** Signing secret for `/payments/webhook` |
+| `STRIPE_PRODUCT_ID` | — | **Required for subscriptions.** Shared Product used for all vendor subscription line items |
+| `VITE_STRIPE_PUBLISHABLE_KEY` | — | **Required for payments (frontend).** Baked into the build by Vite — see `frontend/.env` |
 
 ---
 
@@ -374,13 +390,62 @@ Escalation timeout (how long to wait on own riders before falling back) is a per
 
 ## Subscription Plans
 
-| Plan | Monthly fee | Notes |
-|------|-------------|-------|
-| `free` | $0 | No charge |
-| `standard` | $10.00 | 1000 minor units |
-| `premium` | $25.00 | 2500 minor units |
+There's no fixed price list — every store's monthly fee is set by an admin
+(`PATCH /billing/subscriptions/:tenantId/price`, or inline from **Admin →
+Stores**) and charged via a Stripe Checkout subscription using that per-store
+`amountMinor`/`currency` (Stripe `price_data`, not a catalog Price object).
+
+- **First 30 days after approval**: free trial — `subscriptions.status = 'trialing'`, no Stripe object required.
+- **After the trial, once subscribed**: billed monthly through Stripe.
+- **On a failed payment**: `status = 'past_due'` with a 15-day grace period (`graceUntil`); the store keeps selling until that deadline.
+- **Grace expires, or Stripe reports `unpaid`/cancelled**: the store is suspended (`stores.suspendedReason = 'billing'`).
+- **Admin suspend/reinstate** is tracked independently (`suspendedReason = 'admin'`) — a billing event never overrides it, and vice versa.
 
 Commission is charged per order: `total × commissionBps ÷ 10000` (default 10 %).
+
+---
+
+## Payments (Stripe)
+
+### Local setup
+
+```bash
+# .env — backend
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...       # from `stripe listen`, see below
+STRIPE_PRODUCT_ID=prod_...            # one shared Product for vendor subscriptions
+
+# frontend/.env — publishable key is baked into the build by Vite
+VITE_STRIPE_PUBLISHABLE_KEY=pk_test_...
+```
+
+Create `STRIPE_PRODUCT_ID` once from the [Stripe dashboard](https://dashboard.stripe.com/test/products) (or `stripe products create --name "Bakala Shop vendor subscription"`) — per-store pricing is set at checkout time via `price_data`, so this product exists only to group the line items.
+
+### Forwarding webhooks locally
+
+Install the [Stripe CLI](https://stripe.com/docs/stripe-cli), then:
+
+```bash
+stripe login
+stripe listen --forward-to localhost:3000/payments/webhook
+```
+
+Copy the `whsec_...` it prints into `STRIPE_WEBHOOK_SECRET`. Trigger test events without a full checkout flow:
+
+```bash
+stripe trigger payment_intent.succeeded
+stripe trigger invoice.payment_failed
+```
+
+Use [Stripe's test cards](https://stripe.com/docs/testing) (`4242 4242 4242 4242` success, `4000 0000 0000 9995` decline, `4000 0000 0000 0341` fails on confirm) against the Payment Element on `/checkout/:orderId`.
+
+### Production checklist
+
+- [ ] HTTPS is live (see `docs/oracle-cloud-deploy.md` Step 8) — the webhook endpoint and Apple Pay/Google Pay both require it.
+- [ ] Live-mode `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` / `STRIPE_PRODUCT_ID` set in `.env.prod`, and `VITE_STRIPE_PUBLISHABLE_KEY` passed as a Docker build-arg (see `.github/workflows/deploy.yml`).
+- [ ] Webhook endpoint registered in the Stripe dashboard (**Developers → Webhooks**) pointing at `https://yourdomain.com/payments/webhook`, subscribed to: `payment_intent.succeeded`, `payment_intent.payment_failed`, `charge.refunded`, `customer.subscription.created/updated/deleted`, `invoice.payment_succeeded/failed`.
+- [ ] Stripe **Customer Portal** activated (**Billing → Customer Portal**) — required before any manager clicks "Manage billing".
+- [ ] Smart Retries left on (dashboard default) — the app's 15-day grace period assumes Stripe is still retrying failed invoices during that window.
 
 ---
 

@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { fulfillmentApi } from '../../api/fulfillment'
 import { ordersApi } from '../../api/orders'
 import Badge from '../../components/Badge'
+import { formatMinor } from '../../lib/money'
 
 export default function ActiveJobPage() {
   const { jobId } = useParams<{ jobId: string }>()
@@ -79,8 +80,8 @@ export default function ActiveJobPage() {
 
   const mapsUrl = lastPing
     ? `https://www.google.com/maps/dir/?api=1&destination=${lastPing.lat},${lastPing.lng}`
-    : order
-      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(order.deliveryAddress)}`
+    : order?.addressGeo?.address
+      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(order.addressGeo.address)}`
       : null
 
   if (!job) {
@@ -124,7 +125,7 @@ export default function ActiveJobPage() {
               {isDelivered ? 'Delivered ✓' : 'Deliver to customer'}
             </p>
             {order && (
-              <p className="text-xs text-gray-500">{order.deliveryAddress}</p>
+              <p className="text-xs text-gray-500">{order.addressGeo?.address}</p>
             )}
           </div>
         </div>
@@ -134,8 +135,8 @@ export default function ActiveJobPage() {
       {order && (
         <div className="bg-white border rounded-2xl p-4">
           <p className="text-xs text-gray-400 mb-1">Order #{order.id.slice(0, 8)}…</p>
-          <p className="font-semibold text-green-700 text-lg">${(order.totalMinor / 100).toFixed(2)}</p>
-          <p className="text-sm text-gray-600 mt-1">{order.deliveryAddress}</p>
+          <p className="font-semibold text-green-700 text-lg">{formatMinor(order.totalMinor)}</p>
+          <p className="text-sm text-gray-600 mt-1">{order.addressGeo?.address}</p>
         </div>
       )}
 

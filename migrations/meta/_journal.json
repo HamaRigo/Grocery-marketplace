@@ -8,6 +8,20 @@
       "when": 1782169368371,
       "tag": "0000_next_falcon",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1783218292262,
+      "tag": "0001_luxuriant_mentallo",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1783221609715,
+      "tag": "0002_gorgeous_masque",
+      "breakpoints": true
     }
   ]
 }

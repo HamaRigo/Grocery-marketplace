@@ -2,16 +2,25 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { storesApi, type Store } from '../../api/stores'
+import { billingApi } from '../../api/billing'
 import Badge from '../../components/Badge'
+import { formatMinor } from '../../lib/money'
 
 export default function AdminStoresPage() {
   const qc = useQueryClient()
   const [editingCommission, setEditingCommission] = useState<{ id: string; value: string } | null>(null)
+  const [editingPrice, setEditingPrice] = useState<{ tenantId: string; value: string } | null>(null)
 
   const { data: stores, isLoading } = useQuery({
     queryKey: ['stores-admin'],
     queryFn: () => storesApi.list(),
   })
+
+  const { data: subscriptions } = useQuery({
+    queryKey: ['subscriptions-admin'],
+    queryFn: () => billingApi.listSubscriptions(),
+  })
+  const subByTenant = new Map((subscriptions ?? []).map(row => [row.subscription.tenantId, row.subscription]))
 
   const { mutate: approve } = useMutation({
     mutationFn: (id: string) => storesApi.approve(id),
@@ -29,6 +38,15 @@ export default function AdminStoresPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['stores-admin'] })
       setEditingCommission(null)
+    },
+  })
+
+  const { mutate: savePrice } = useMutation({
+    mutationFn: ({ tenantId, amountMinor }: { tenantId: string; amountMinor: number }) =>
+      billingApi.setPrice(tenantId, amountMinor, 'QAR'),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['subscriptions-admin'] })
+      setEditingPrice(null)
     },
   })
 
@@ -51,12 +69,16 @@ export default function AdminStoresPage() {
               <th className="text-left px-4 py-3 font-medium text-gray-700">Store</th>
               <th className="text-left px-4 py-3 font-medium text-gray-700">Policy</th>
               <th className="text-left px-4 py-3 font-medium text-gray-700">Commission</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-700">Subscription</th>
               <th className="text-left px-4 py-3 font-medium text-gray-700">Status</th>
               <th className="px-4 py-3" />
             </tr>
           </thead>
           <tbody className="divide-y">
-            {stores?.map((store: Store) => (
+            {stores?.map((store: Store) => {
+              const sub = subByTenant.get(store.id)
+              const isOverdue = sub?.status === 'past_due' && sub.graceUntil
+              return (
               <tr key={store.id} className="hover:bg-gray-50">
                 <td className="px-4 py-3">
                   <p className="font-medium text-gray-900">{store.name}</p>
@@ -103,6 +125,58 @@ export default function AdminStoresPage() {
                     </button>
                   )}
                 </td>
+                <td className="px-4 py-3">
+                  {editingPrice?.tenantId === store.id ? (
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="number" min={0} step={0.01}
+                        value={editingPrice.value}
+                        onChange={e => setEditingPrice({ tenantId: store.id, value: e.target.value })}
+                        className="border rounded px-2 py-1 text-xs w-20"
+                        autoFocus
+                      />
+                      <span className="text-xs text-gray-500">QAR/mo</span>
+                      <button
+                        onClick={() => savePrice({
+                          tenantId: store.id,
+                          amountMinor: Math.round(Number(editingPrice.value) * 100),
+                        })}
+                        className="text-xs text-green-600 hover:underline ml-1"
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={() => setEditingPrice(null)}
+                        className="text-xs text-gray-400 hover:underline"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <div>
+                      <button
+                        onClick={() => setEditingPrice({
+                          tenantId: store.id,
+                          value: sub ? String(sub.amountMinor / 100) : '0',
+                        })}
+                        className="text-gray-700 hover:text-indigo-600 hover:underline"
+                        title="Click to edit"
+                      >
+                        {sub?.amountMinor ? `${formatMinor(sub.amountMinor)}/mo` : 'No price set'}
+                      </button>
+                      {sub && (
+                        <div className="mt-0.5">
+                          <Badge status={sub.status} />
+                          {isOverdue && (
+                            <span className="ml-1 text-xs text-red-600">
+                              overdue since {new Date(sub.graceUntil!).toLocaleDateString()}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </td>
                 <td className="px-4 py-3"><Badge status={store.status} /></td>
                 <td className="px-4 py-3 text-right space-x-2">
                   {store.status === 'pending' && (
@@ -125,7 +199,8 @@ export default function AdminStoresPage() {
                   )}
                 </td>
               </tr>
-            ))}
+              )
+            })}
           </tbody>
         </table>
         {stores?.length === 0 && !isLoading && (

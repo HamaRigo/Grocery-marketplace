@@ -7,12 +7,15 @@ import CurbsidePage from './pages/customer/CurbsidePage'
 import StoresPage from './pages/customer/StoresPage'
 import StorePage from './pages/customer/StorePage'
 import CartPage from './pages/customer/CartPage'
+import CheckoutPage from './pages/customer/CheckoutPage'
 import OrdersPage from './pages/customer/OrdersPage'
 import TrackPage from './pages/customer/TrackPage'
 import OrderQueuePage from './pages/manager/OrderQueuePage'
 import CatalogPage from './pages/manager/CatalogPage'
 import SlotsPage from './pages/manager/SlotsPage'
+import SubscriptionPage from './pages/manager/SubscriptionPage'
 import AdminStoresPage from './pages/admin/StoresPage'
+import AdminOrdersPage from './pages/admin/OrdersPage'
 import ReportsPage from './pages/admin/ReportsPage'
 import RiderPage from './pages/rider/RiderPage'
 import ActiveJobPage from './pages/rider/ActiveJobPage'
@@ -48,14 +51,17 @@ export default function App() {
         <Route path="/stores"           element={<StoresPage />} />
         <Route path="/stores/:id"       element={<StorePage />} />
         <Route path="/cart/:tenantId"   element={<CartPage />} />
+        <Route path="/checkout/:orderId" element={<CheckoutPage />} />
         <Route path="/orders"           element={<OrdersPage />} />
         <Route path="/orders/:id/track" element={<TrackPage />} />
 
         <Route path="/manager"                   element={<OrderQueuePage />} />
         <Route path="/manager/catalog/:tenantId" element={<CatalogPage />} />
         <Route path="/manager/slots/:tenantId"   element={<SlotsPage />} />
+        <Route path="/manager/subscription"      element={<SubscriptionPage />} />
 
         <Route path="/admin"         element={<AdminStoresPage />} />
+        <Route path="/admin/orders"  element={<AdminOrdersPage />} />
         <Route path="/admin/reports" element={<ReportsPage />} />
 
         <Route path="/rider"              element={<RiderPage />} />

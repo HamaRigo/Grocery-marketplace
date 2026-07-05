@@ -6,6 +6,12 @@ COPY package*.json ./
 RUN npm ci
 
 COPY . .
+
+# Vite bakes VITE_* vars into the bundle at build time — must be provided
+# as a build-arg, since a runtime env var on the nginx container is too late.
+ARG VITE_STRIPE_PUBLISHABLE_KEY
+ENV VITE_STRIPE_PUBLISHABLE_KEY=$VITE_STRIPE_PUBLISHABLE_KEY
+
 RUN npm run build
 
 # ── Stage 2: Serve ───────────────────────────────────────────────────────────

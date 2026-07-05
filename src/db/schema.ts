@@ -9,8 +9,8 @@ export const roleEnum           = pgEnum('role',            ['customer','manager
 export const storeStatusEnum    = pgEnum('store_status',    ['pending','active','suspended'])
 export const dispatchPolicyEnum = pgEnum('dispatch_policy', ['OWN_ONLY','OWN_FIRST','POOL_ONLY'])
 export const productStatusEnum  = pgEnum('product_status',  ['active','delisted'])
-export const orderStatusEnum    = pgEnum('order_status',    ['placed','accepted','preparing','ready','assigned','out_for_delivery','delivered','cancelled','rejected'])
-export const paymentStatusEnum  = pgEnum('payment_status',  ['authorized','captured','voided','refunded','failed'])
+export const orderStatusEnum    = pgEnum('order_status',    ['placed','accepted','preparing','ready','assigned','out_for_delivery','delivered','cancelled','rejected','pending_payment','payment_failed'])
+export const paymentStatusEnum  = pgEnum('payment_status',  ['authorized','captured','voided','refunded','failed','pending','partially_refunded'])
 export const riderStatusEnum    = pgEnum('rider_status',    ['online','offline','busy'])
 export const jobStatusEnum      = pgEnum('job_status',      ['pending','assigned','picked_up','delivered','failed'])
 
@@ -40,6 +40,9 @@ export const stores = pgTable('stores', {
   name:                 text('name').notNull(),
   logoUrl:              text('logo_url'),
   status:               storeStatusEnum('status').default('pending').notNull(),
+  // Who suspended the store, so a billing-triggered suspension never masks an
+  // admin's manual one, and paying up never silently reactivates an admin suspension.
+  suspendedReason:      text('suspended_reason'),                              // 'admin' | 'billing' | null
   commissionBps:        integer('commission_bps').default(1000).notNull(),
   dispatchPolicy:       dispatchPolicyEnum('dispatch_policy').default('OWN_FIRST').notNull(),
   escalationTimeoutS:   integer('escalation_timeout_s').default(300).notNull(),
@@ -77,7 +80,7 @@ export const products = pgTable('products', {
   description: text('description'),
   mediaUrl:    text('media_url'),
   priceMinor:  integer('price_minor').notNull(),
-  currency:    text('currency').default('USD').notNull(),
+  currency:    text('currency').default('QAR').notNull(),
   status:      productStatusEnum('status').default('active').notNull(),
 }, t => ({ tenantIdx: index('products_tenant_idx').on(t.tenantId) }))
 
@@ -121,7 +124,7 @@ export const orders = pgTable('orders', {
   subtotalMinor:    integer('subtotal_minor').notNull(),
   deliveryFeeMinor: integer('delivery_fee_minor').default(0).notNull(),
   totalMinor:       integer('total_minor').notNull(),
-  currency:         text('currency').default('USD').notNull(),
+  currency:         text('currency').default('QAR').notNull(),
   addressGeo:       jsonb('address_geo'),                                    // null for curbside
   scheduledSlotId:  uuid('scheduled_slot_id'),                                          // null for ASAP orders
   placedAt:         timestamp('placed_at').defaultNow().notNull(),
@@ -152,16 +155,41 @@ export const orderStatusHistory = pgTable('order_status_history', {
 // ─── Payments ─────────────────────────────────────────────────────────────────
 
 export const payments = pgTable('payments', {
-  id:          uuid('id').primaryKey().defaultRandom(),
-  tenantId:    uuid('tenant_id').notNull(),
-  orderId:     uuid('order_id').references(() => orders.id),
-  type:        text('type').notNull(),
-  gatewayRef:  text('gateway_ref'),
-  amountMinor: integer('amount_minor').notNull(),
-  status:      paymentStatusEnum('status').notNull(),
-  createdAt:   timestamp('created_at').defaultNow().notNull(),
+  id:                    uuid('id').primaryKey().defaultRandom(),
+  tenantId:              uuid('tenant_id').notNull(),
+  orderId:               uuid('order_id').references(() => orders.id),
+  type:                  text('type').notNull(),
+  provider:              text('provider').default('stub').notNull(),      // 'stripe' | 'stub' | 'cash'
+  gatewayRef:            text('gateway_ref'),
+  stripePaymentIntentId: text('stripe_payment_intent_id').unique(),
+  amountMinor:           integer('amount_minor').notNull(),
+  refundedMinor:         integer('refunded_minor').default(0).notNull(),
+  currency:              text('currency').default('QAR').notNull(),
+  status:                paymentStatusEnum('status').notNull(),
+  createdAt:             timestamp('created_at').defaultNow().notNull(),
 }, t => ({
   orderIdx: index('payments_order_idx').on(t.orderId),
+}))
+
+// Idempotency ledger for Stripe webhook events — the event id is the PK, so a
+// retried delivery of the same event is a no-op insert instead of a double-apply.
+export const webhookEvents = pgTable('webhook_events', {
+  id:          text('id').primaryKey(),          // Stripe event id, e.g. evt_...
+  type:        text('type').notNull(),
+  receivedAt:  timestamp('received_at').defaultNow().notNull(),
+  processedAt: timestamp('processed_at'),
+})
+
+export const refunds = pgTable('refunds', {
+  id:              uuid('id').primaryKey().defaultRandom(),
+  paymentId:       uuid('payment_id').notNull().references(() => payments.id),
+  stripeRefundId:  text('stripe_refund_id').unique(),
+  amountMinor:     integer('amount_minor').notNull(),
+  reason:          text('reason'),
+  actor:           text('actor'),
+  createdAt:       timestamp('created_at').defaultNow().notNull(),
+}, t => ({
+  paymentIdx: index('refunds_payment_idx').on(t.paymentId),
 }))
 
 // ─── Fulfillment ──────────────────────────────────────────────────────────────
@@ -203,17 +231,25 @@ export const reviews = pgTable('reviews', {
 
 // ─── Billing ─────────────────────────────────────────────────────────────────
 
-export const subscriptionStatusEnum = pgEnum('subscription_status', ['trialing','active','past_due','cancelled'])
+export const subscriptionStatusEnum = pgEnum('subscription_status', ['trialing','active','past_due','cancelled','incomplete','unpaid'])
 
 export const subscriptions = pgTable('subscriptions', {
-  id:               uuid('id').primaryKey().defaultRandom(),
-  tenantId:         uuid('tenant_id').notNull().references(() => stores.id, { onDelete: 'cascade' }).unique(),
-  plan:             text('plan').default('free').notNull(),      // free | standard | premium
-  status:           subscriptionStatusEnum('status').default('active').notNull(),
-  amountMinor:      integer('amount_minor').default(0).notNull(),
-  currency:         text('currency').default('USD').notNull(),
-  currentPeriodEnd: timestamp('current_period_end'),
-  createdAt:        timestamp('created_at').defaultNow().notNull(),
+  id:                    uuid('id').primaryKey().defaultRandom(),
+  tenantId:              uuid('tenant_id').notNull().references(() => stores.id, { onDelete: 'cascade' }).unique(),
+  plan:                  text('plan').default('free').notNull(),      // free | standard | premium
+  status:                subscriptionStatusEnum('status').default('active').notNull(),
+  amountMinor:           integer('amount_minor').default(0).notNull(),   // admin-set price for this store's plan
+  currency:              text('currency').default('QAR').notNull(),
+  stripeCustomerId:      text('stripe_customer_id').unique(),
+  stripeSubscriptionId:  text('stripe_subscription_id').unique(),
+  stripePriceId:         text('stripe_price_id'),                        // null — price is set inline (price_data), not a fixed Stripe Price
+  billingInterval:       text('billing_interval').default('month').notNull(),
+  cancelAtPeriodEnd:     boolean('cancel_at_period_end').default(false).notNull(),
+  // Set when a payment fails; the store is only suspended once this passes
+  // (15-day grace) or Stripe cancels the subscription outright.
+  graceUntil:            timestamp('grace_until'),
+  currentPeriodEnd:      timestamp('current_period_end'),
+  createdAt:             timestamp('created_at').defaultNow().notNull(),
 })
 
 export const commissionSettlements = pgTable('commission_settlements', {

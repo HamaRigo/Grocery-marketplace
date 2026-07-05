@@ -4,10 +4,12 @@ import { Link, useNavigate } from 'react-router-dom'
 import { ordersApi, type Order } from '../../api/orders'
 import { cartApi } from '../../api/cart'
 import Badge from '../../components/Badge'
+import { formatMinor } from '../../lib/money'
 
 const TRACKABLE  = ['assigned', 'out_for_delivery']
 const REVIEWABLE = ['delivered']
-const CANCELLABLE = ['placed', 'accepted']
+const CANCELLABLE = ['pending_payment', 'placed', 'accepted']
+const AWAITING_PAYMENT = ['pending_payment']
 
 export default function OrdersPage() {
   const qc = useQueryClient()
@@ -76,15 +78,26 @@ export default function OrdersPage() {
             <div className="flex items-start justify-between mb-2">
               <div>
                 <p className="font-medium text-gray-900 text-sm">{order.id.slice(0, 8)}…</p>
-                <p className="text-xs text-gray-500">{new Date(order.createdAt).toLocaleString()}</p>
+                <p className="text-xs text-gray-500">{new Date(order.placedAt).toLocaleString()}</p>
               </div>
-              <Badge status={order.status} />
+              <div className="flex flex-col items-end gap-1">
+                <Badge status={order.status} />
+                {(order.payment?.status === 'refunded' || order.payment?.status === 'partially_refunded') && (
+                  <Badge status={order.payment.status} />
+                )}
+              </div>
             </div>
 
-            <p className="text-sm text-gray-700 mb-1">{order.deliveryAddress}</p>
-            <p className="font-semibold text-green-700 mb-3">${(order.totalMinor / 100).toFixed(2)}</p>
+            <p className="text-sm text-gray-700 mb-1">{order.addressGeo?.address}</p>
+            <p className="font-semibold text-green-700 mb-3">{formatMinor(order.totalMinor)}</p>
 
             <div className="flex gap-2 flex-wrap">
+              {AWAITING_PAYMENT.includes(order.status) && (
+                <Link to={`/checkout/${order.id}`}
+                  className="px-3 py-1 text-xs bg-amber-500 text-white rounded hover:bg-amber-600">
+                  Complete payment
+                </Link>
+              )}
               {TRACKABLE.includes(order.status) && (
                 <Link to={`/orders/${order.id}/track`}
                   className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">

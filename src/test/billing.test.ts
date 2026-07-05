@@ -22,11 +22,3 @@ describe('commission calculation', () => {
     expect(calcCommission(5_000, 10_000)).toBe(5_000)
   })
 })
-
-describe('subscription plan amounts', () => {
-  const PLANS = { free: 0, standard: 1000, premium: 2500 }
-
-  it('free tier costs nothing', () => expect(PLANS.free).toBe(0))
-  it('standard = $10.00', ()      => expect(PLANS.standard).toBe(1000))
-  it('premium = $25.00', ()       => expect(PLANS.premium).toBe(2500))
-})

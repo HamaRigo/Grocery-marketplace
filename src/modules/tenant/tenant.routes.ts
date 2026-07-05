@@ -26,7 +26,7 @@ export const tenantRoutes: FastifyPluginAsync = async (app) => {
   // ── Any authenticated user: onboard ──────────────────────────────────────
   app.post('/', { onRequest: [authenticated] }, async (req, reply) => {
     const { name } = validate(onboardSchema, req.body)
-    const store = await TenantService.onboard(name, (req as any).user.sub)
+    const store = await TenantService.onboard(name, (req as any).sessionUser.userId)
     return reply.code(201).send(store)
   })
 

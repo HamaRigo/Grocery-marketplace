@@ -16,7 +16,8 @@ async function req<T>(path: string, init: RequestInit = {}): Promise<T> {
   return res.json() as T
 }
 
-export const get  = <T>(url: string)                 => req<T>(url)
-export const post = <T>(url: string, body?: unknown) => req<T>(url, { method: 'POST',   body: JSON.stringify(body) })
-export const put  = <T>(url: string, body?: unknown) => req<T>(url, { method: 'PUT',    body: JSON.stringify(body) })
-export const del  = <T>(url: string)                 => req<T>(url, { method: 'DELETE' })
+export const get   = <T>(url: string)                 => req<T>(url)
+export const post  = <T>(url: string, body?: unknown) => req<T>(url, { method: 'POST',  body: JSON.stringify(body) })
+export const put   = <T>(url: string, body?: unknown) => req<T>(url, { method: 'PUT',   body: JSON.stringify(body) })
+export const patch = <T>(url: string, body?: unknown) => req<T>(url, { method: 'PATCH', body: JSON.stringify(body) })
+export const del   = <T>(url: string)                 => req<T>(url, { method: 'DELETE' })

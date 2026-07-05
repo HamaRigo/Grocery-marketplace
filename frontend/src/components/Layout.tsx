@@ -89,11 +89,15 @@ export default function Layout() {
                     {t('nav.slots', 'Slots')}
                   </Link>
                 )}
+                <Link to="/manager/subscription" className="text-gray-700 hover:text-green-600">
+                  {t('nav.subscription')}
+                </Link>
               </>
             )}
             {role === 'admin' && (
               <>
                 <Link to="/admin" className="text-gray-700 hover:text-green-600">{t('nav.storesAdmin')}</Link>
+                <Link to="/admin/orders" className="text-gray-700 hover:text-green-600">{t('nav.orders', 'Orders')}</Link>
                 <Link to="/admin/reports" className="text-gray-700 hover:text-green-600">{t('nav.reports')}</Link>
               </>
             )}

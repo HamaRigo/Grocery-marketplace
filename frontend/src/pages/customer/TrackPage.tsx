@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ordersApi } from '../../api/orders'
 import Badge from '../../components/Badge'
+import { formatMinor } from '../../lib/money'
 
 interface Location { lat: number; lng: number; updatedAt: string }
 
@@ -64,8 +65,8 @@ export default function TrackPage() {
             <span className="text-sm text-gray-500">Order #{order.id.slice(0, 8)}…</span>
             <Badge status={order.status} />
           </div>
-          <p className="text-sm text-gray-700">{order.deliveryAddress}</p>
-          <p className="font-semibold text-green-700 mt-1">${(order.totalMinor / 100).toFixed(2)}</p>
+          <p className="text-sm text-gray-700">{order.addressGeo?.address}</p>
+          <p className="font-semibold text-green-700 mt-1">{formatMinor(order.totalMinor)}</p>
         </div>
       )}
 

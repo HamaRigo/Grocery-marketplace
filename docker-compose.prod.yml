@@ -109,7 +109,10 @@ services:
       elasticsearch: { condition: service_healthy }
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        VITE_STRIPE_PUBLISHABLE_KEY: ${VITE_STRIPE_PUBLISHABLE_KEY}
     image: ghcr.io/hamarigo/grocery-marketplace/frontend:latest
     restart: always
     ports:

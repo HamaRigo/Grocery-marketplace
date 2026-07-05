@@ -129,6 +129,38 @@ PORT=3000
 TRACKING_PORT=3001
 DISCOVERY_PORT=3002
 NODE_ENV=production
+
+STRIPE_SECRET_KEY=<sk_live_...>
+STRIPE_WEBHOOK_SECRET=<whsec_...>
+STRIPE_PRODUCT_ID=<prod_...>
+VITE_STRIPE_PUBLISHABLE_KEY=<pk_live_...>
+```
+
+> **HTTPS is mandatory once Stripe is wired up** — the webhook endpoint must be
+> reachable over HTTPS, and Apple Pay/Google Pay require a verified HTTPS
+> domain. Do Step 8 (custom domain + Let's Encrypt) before registering the
+> webhook or accepting real payments; Stripe test mode over plain HTTP is fine
+> for local development via the Stripe CLI.
+
+### Register the webhook + enable the Customer Portal (one-time, in the Stripe Dashboard)
+
+1. **Developers → Webhooks → Add endpoint** → `https://yourdomain.com/payments/webhook`
+   Subscribe to: `payment_intent.succeeded`, `payment_intent.payment_failed`,
+   `charge.refunded`, `customer.subscription.created`,
+   `customer.subscription.updated`, `customer.subscription.deleted`,
+   `invoice.payment_succeeded`, `invoice.payment_failed`.
+   Copy the signing secret into `STRIPE_WEBHOOK_SECRET`.
+2. **Billing → Customer Portal** — click **Activate** (it's off by default; vendor
+   subscription management links to this and will 500 until it's enabled).
+3. **Product catalog → Add product** — create one product (e.g. "Bakala Shop
+   vendor subscription") and copy its id into `STRIPE_PRODUCT_ID`. Per-store
+   pricing is set from the admin dashboard, not from fixed Stripe Prices.
+
+Local development: use the [Stripe CLI](https://stripe.com/docs/stripe-cli) to
+forward webhooks to your machine instead of registering a public endpoint:
+
+```bash
+stripe listen --forward-to localhost:3000/payments/webhook
 ```
 
 ---

@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { reportsApi } from '../../api/reports'
+import { formatMinor, formatMajor } from '../../lib/money'
 
 function StatCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
   return (
@@ -53,9 +54,9 @@ export default function ReportsPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
         <StatCard label="Total Orders"      value={totalOrders} />
-        <StatCard label="Revenue"           value={overview ? `$${overview.capturedRevenueMajor.toFixed(2)}`   : '—'} />
-        <StatCard label="Commission Earned" value={overview ? `$${overview.commissionEarnedMajor.toFixed(2)}` : '—'} />
-        <StatCard label="Unpaid Commission" value={overview ? `$${overview.commissionUnpaidMajor.toFixed(2)}` : '—'} />
+        <StatCard label="Revenue"           value={overview ? formatMajor(overview.capturedRevenueMajor)   : '—'} />
+        <StatCard label="Commission Earned" value={overview ? formatMajor(overview.commissionEarnedMajor) : '—'} />
+        <StatCard label="Unpaid Commission" value={overview ? formatMajor(overview.commissionUnpaidMajor) : '—'} />
         <StatCard label="Active Stores"     value={overview?.storeCount ?? '—'} />
         <StatCard label="Users"             value={overview?.userCount  ?? '—'} />
         <StatCard
@@ -92,7 +93,7 @@ export default function ReportsPage() {
                 <tr key={row.date} className="hover:bg-gray-50">
                   <td className="px-4 py-2 text-gray-600">{row.date}</td>
                   <td className="px-4 py-2 text-right font-medium text-green-700">
-                    ${row.revenueMajor.toFixed(2)}
+                    {formatMajor(row.revenueMajor)}
                   </td>
                 </tr>
               ))}
@@ -127,10 +128,10 @@ export default function ReportsPage() {
                   </td>
                   <td className="px-4 py-2 text-right text-gray-700">{row.orderCount}</td>
                   <td className="px-4 py-2 text-right font-medium text-green-700">
-                    ${row.revenueMajor.toFixed(2)}
+                    {formatMajor(row.revenueMajor)}
                   </td>
                   <td className="px-4 py-2 text-right text-gray-600">
-                    ${(row.avgOrderSize / 100).toFixed(2)}
+                    {formatMinor(row.avgOrderSize)}
                   </td>
                 </tr>
               ))}

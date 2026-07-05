@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { catalogApi, type Product } from '../../api/catalog'
 import { cartApi } from '../../api/cart'
 import { storesApi } from '../../api/stores'
+import { formatMinor } from '../../lib/money'
 
 export default function StorePage() {
   const { id } = useParams<{ id: string }>()
@@ -118,7 +119,7 @@ export default function StorePage() {
             )}
             <div className="flex items-center justify-between mt-3">
               <span className="font-semibold text-green-700">
-                ${(p.priceMinor / 100).toFixed(2)}
+                {formatMinor(p.priceMinor)}
               </span>
               <button
                 onClick={() => addToCart(p)}

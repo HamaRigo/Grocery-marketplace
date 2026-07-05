@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { fulfillmentApi, type Job } from '../../api/fulfillment'
 import Badge from '../../components/Badge'
+import { formatMinor } from '../../lib/money'
 
 const STATUS_COLOR = {
   online:  'bg-green-500',
@@ -109,7 +110,7 @@ export default function RiderPage() {
           </div>
           <div className="bg-green-50 rounded-xl p-4 text-center">
             <p className="text-3xl font-bold text-green-700">
-              {earnings?.totalMinor != null ? `$${(earnings.totalMinor / 100).toFixed(0)}` : '—'}
+              {earnings?.totalMinor != null ? formatMinor(earnings.totalMinor) : '—'}
             </p>
             <p className="text-xs text-gray-500 mt-1">Est. earnings</p>
           </div>

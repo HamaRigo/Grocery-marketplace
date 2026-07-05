@@ -8,7 +8,9 @@
     "reports": "التقارير",
     "myDeliveries": "توصيلاتي",
     "logout": "تسجيل الخروج",
-    "slots": "المواعيد"
+    "slots": "المواعيد",
+    "subscription": "الاشتراك",
+    "orders": "الطلبات"
   },
   "notifications": {
     "title": "الإشعارات",
@@ -35,6 +37,16 @@
     "placeOrder": "تأكيد الطلب",
     "placingOrder": "جارٍ الطلب…"
   },
+  "checkout": {
+    "title": "الدفع",
+    "orderTotal": "إجمالي الطلب",
+    "loadingForm": "جارٍ تحميل نموذج الدفع…",
+    "payNow": "ادفع الآن",
+    "processing": "جارٍ المعالجة…",
+    "genericError": "فشلت عملية الدفع. حاول مرة أخرى.",
+    "notAwaitingPayment": "هذا الطلب لا ينتظر الدفع.",
+    "backToOrders": "العودة إلى الطلبات"
+  },
   "orders": {
     "title": "طلباتي",
     "loading": "جارٍ التحميل…",
@@ -54,7 +66,7 @@
     "newProduct": "منتج جديد",
     "name": "الاسم",
     "description": "الوصف",
-    "price": "السعر ($)",
+    "price": "السعر (ر.ق)",
     "save": "حفظ",
     "saving": "جارٍ الحفظ…",
     "cancel": "إلغاء",
@@ -71,5 +83,18 @@
     "save": "حفظ",
     "cancel": "إلغاء",
     "close": "إغلاق"
+  },
+  "subscription": {
+    "title": "الاشتراك",
+    "checkoutSuccess": "تم إعداد الاشتراك — شكراً لك!",
+    "checkoutCancelled": "تم إلغاء عملية الدفع — لم يتم إجراء أي تغييرات.",
+    "status": "الحالة",
+    "price": "السعر",
+    "trialEnds": "تنتهي الفترة المجانية في",
+    "renewsOn": "يتجدد في",
+    "overdue": "الدفع متأخر — سيتم تعطيل المتجر إذا لم يُسدَّد قبل",
+    "noPriceSet": "لم يتم تحديد سعر بعد — يرجى التواصل مع الإدارة",
+    "subscribe": "اشترك",
+    "manageBilling": "إدارة الفوترة"
   }
 }

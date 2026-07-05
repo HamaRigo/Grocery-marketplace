@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { catalogApi, type Product } from '../../api/catalog'
 import { storesApi } from '../../api/stores'
 import { ordersApi, type CurbsideVehicle, type OrderLine } from '../../api/orders'
+import { formatMinor } from '../../lib/money'
 
 type Step = 'browse' | 'checkout' | 'confirmed'
 
@@ -110,7 +111,7 @@ export default function CurbsidePage() {
             <p className="text-green-700 font-semibold text-lg">You're checked in!</p>
             <p className="text-green-600 text-sm mt-1">An employee is bringing your order to your car.</p>
             <p className="text-xs text-gray-500 mt-3">
-              Payment: <span className="font-medium capitalize">{paymentMethod}</span> · Total: <span className="font-medium">${(total / 100).toFixed(2)}</span>
+              Payment: <span className="font-medium capitalize">{paymentMethod}</span> · Total: <span className="font-medium">{formatMinor(total)}</span>
             </p>
           </div>
         ) : (
@@ -143,14 +144,14 @@ export default function CurbsidePage() {
             <div key={l.productId} className="flex justify-between items-center text-sm py-1">
               <span className="text-gray-700">{l.name} × {l.qty}</span>
               <div className="flex items-center gap-3">
-                <span className="font-medium text-green-700">${(l.priceMinor * l.qty / 100).toFixed(2)}</span>
+                <span className="font-medium text-green-700">{formatMinor(l.priceMinor * l.qty)}</span>
                 <button onClick={() => removeFromCart(l.productId)} className="text-red-400 hover:text-red-600 text-xs">Remove</button>
               </div>
             </div>
           ))}
           <div className="border-t mt-3 pt-3 flex justify-between font-semibold">
             <span>Total</span>
-            <span className="text-green-700">${(total / 100).toFixed(2)}</span>
+            <span className="text-green-700">{formatMinor(total)}</span>
           </div>
         </div>
 
@@ -208,7 +209,7 @@ export default function CurbsidePage() {
           disabled={submitting || cart.length === 0}
           className="w-full py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 disabled:opacity-50"
         >
-          {submitting ? 'Placing order…' : `Place order · $${(total / 100).toFixed(2)}`}
+          {submitting ? 'Placing order…' : `Place order · ${formatMinor(total)}`}
         </button>
       </div>
     )
@@ -247,7 +248,7 @@ export default function CurbsidePage() {
                 <p className="text-xs text-gray-500 mb-2 line-clamp-2">{p.description}</p>
               )}
               <div className="flex items-center justify-between mt-3">
-                <span className="font-semibold text-green-700">${(p.priceMinor / 100).toFixed(2)}</span>
+                <span className="font-semibold text-green-700">{formatMinor(p.priceMinor)}</span>
                 <div className="flex items-center gap-2">
                   {cartLine && (
                     <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
@@ -278,7 +279,7 @@ export default function CurbsidePage() {
             onClick={() => setStep('checkout')}
             className="w-full max-w-sm py-3 bg-green-600 text-white rounded-xl font-semibold shadow-lg hover:bg-green-700"
           >
-            Checkout · {itemCount} items · ${(total / 100).toFixed(2)}
+            Checkout · {itemCount} items · {formatMinor(total)}
           </button>
         </div>
       )}

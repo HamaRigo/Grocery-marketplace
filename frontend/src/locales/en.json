@@ -7,7 +7,9 @@
     "storesAdmin": "Stores",
     "reports": "Reports",
     "myDeliveries": "My Deliveries",
-    "logout": "Logout"
+    "logout": "Logout",
+    "subscription": "Subscription",
+    "orders": "Orders"
   },
   "notifications": {
     "title": "Notifications",
@@ -34,6 +36,16 @@
     "placeOrder": "Place order",
     "placingOrder": "Placing order…"
   },
+  "checkout": {
+    "title": "Payment",
+    "orderTotal": "Order total",
+    "loadingForm": "Loading payment form…",
+    "payNow": "Pay now",
+    "processing": "Processing…",
+    "genericError": "Payment failed. Please try again.",
+    "notAwaitingPayment": "This order isn't awaiting payment.",
+    "backToOrders": "Back to orders"
+  },
   "orders": {
     "title": "My Orders",
     "loading": "Loading…",
@@ -53,7 +65,7 @@
     "newProduct": "New product",
     "name": "Name",
     "description": "Description",
-    "price": "Price ($)",
+    "price": "Price (QAR)",
     "save": "Save",
     "saving": "Saving…",
     "cancel": "Cancel",
@@ -70,5 +82,18 @@
     "save": "Save",
     "cancel": "Cancel",
     "close": "Close"
+  },
+  "subscription": {
+    "title": "Subscription",
+    "checkoutSuccess": "Subscription set up — thank you!",
+    "checkoutCancelled": "Checkout cancelled — no changes made.",
+    "status": "Status",
+    "price": "Price",
+    "trialEnds": "Free trial ends",
+    "renewsOn": "Renews on",
+    "overdue": "Payment overdue — store will be disabled if unpaid past",
+    "noPriceSet": "No price set yet — ask an admin",
+    "subscribe": "Subscribe",
+    "manageBilling": "Manage billing"
   }
 }

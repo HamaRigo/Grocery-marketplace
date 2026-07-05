@@ -4,6 +4,7 @@ import { db } from '../../platform/db'
 import { emit, Events } from '../../platform/events'
 import { orders, orderLines, orderStatusHistory, stockReservations, inventory, payments, deliverySlots } from '../../db/schema'
 import { SchedulingService } from '../scheduling/scheduling.service'
+import { TenantService } from '../tenant/tenant.service'
 
 export interface CheckoutItem {
   productId:  string
@@ -31,6 +32,7 @@ export interface CurbsideCheckoutInput {
 }
 
 export async function checkoutSaga(input: CheckoutInput) {
+  await TenantService.assertCanSell(input.tenantId)
   const orderId = randomUUID()
 
   return db.transaction(async (tx) => {
@@ -60,19 +62,12 @@ export async function checkoutSaga(input: CheckoutInput) {
     // Batch insert all reservations in a single round-trip
     await tx.insert(stockReservations).values(reservationRows)
 
-    // 2. Authorize payment (stub — swap for real gateway call)
+    // 2. Compute totals. Payment is collected online after checkout (see
+    // payments.service.ts) — the order sits in pending_payment, holding this
+    // same inventory reservation, until the Stripe webhook confirms payment.
     const subtotal    = input.items.reduce((s, i) => s + i.priceMinor * i.qty, 0)
     const deliveryFee = 200 // 2.00 flat for MVP
     const total       = subtotal + deliveryFee
-
-    await tx.insert(payments).values({
-      tenantId:    input.tenantId,
-      orderId,
-      type:        'order',
-      gatewayRef:  `stub_auth_${randomUUID()}`,
-      amountMinor: total,
-      status:      'authorized',
-    })
 
     // 3. Book delivery slot if requested (outside main tx to avoid lock contention)
     if (input.scheduledSlotId) {
@@ -85,7 +80,8 @@ export async function checkoutSaga(input: CheckoutInput) {
       id:               orderId,
       tenantId:         input.tenantId,
       customerId:       input.customerId,
-      status:           'placed',
+      status:           'pending_payment',
+      paymentMethod:    'online',
       subtotalMinor:    subtotal,
       deliveryFeeMinor: deliveryFee,
       totalMinor:       total,
@@ -104,18 +100,14 @@ export async function checkoutSaga(input: CheckoutInput) {
       }))
     )
 
-    await tx.insert(orderStatusHistory).values({ orderId, status: 'placed', actor: 'customer' })
-
-    emit(Events.OrderPlaced, {
-      eventId: randomUUID(), occurredAt: new Date().toISOString(),
-      tenantId: input.tenantId, payload: { orderId, customerId: input.customerId, totalMinor: total },
-    })
+    await tx.insert(orderStatusHistory).values({ orderId, status: 'pending_payment', actor: 'customer' })
 
     return order
   })
 }
 
 export async function curbsideCheckoutSaga(input: CurbsideCheckoutInput) {
+  await TenantService.assertCanSell(input.tenantId)
   const orderId = randomUUID()
 
   return db.transaction(async (tx) => {

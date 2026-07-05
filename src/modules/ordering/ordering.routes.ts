@@ -11,7 +11,7 @@ import { redis } from '../../platform/redis'
 
 const checkoutSchema = z.object({
   tenantId:        z.string().uuid(),
-  currency:        z.string().length(3).default('USD'),
+  currency:        z.string().length(3).default('QAR'),
   addressGeo:      S.latLng,
   scheduledSlotId: z.string().uuid().optional(),
 })
@@ -28,7 +28,7 @@ const curbsideSchema = z.object({
   guestName:     z.string().min(1).max(100),
   vehicle:       vehicleSchema,
   paymentMethod: z.enum(['cash', 'card']),
-  currency:      z.string().length(3).default('USD'),
+  currency:      z.string().length(3).default('QAR'),
   items: z.array(z.object({
     productId:  z.string().uuid(),
     name:       z.string(),
@@ -58,7 +58,7 @@ export const orderingRoutes: FastifyPluginAsync = async (app) => {
     if (count === 1) await redis.expire(rlKey, 3600)
     if (count > 3) return reply.code(429).send({ error: 'Too many curbside orders. Please try again later.' })
 
-    const order = await curbsideCheckoutSaga({ ...input, currency: input.currency ?? 'USD' })
+    const order = await curbsideCheckoutSaga({ ...input, currency: input.currency ?? 'QAR' })
     return reply.code(201).send(order)
   })
 
@@ -70,25 +70,33 @@ export const orderingRoutes: FastifyPluginAsync = async (app) => {
   // ── Customer ──────────────────────────────────────────────────────────────
 
   app.post('/checkout', { onRequest: [onlyRole('customer')] }, async (req, reply) => {
-    const user = (req as any).user
+    const user = (req as any).sessionUser
     const { tenantId, currency, addressGeo, scheduledSlotId } = validate(checkoutSchema, req.body)
-    const items = await CartService.get(user.sub, tenantId)
+    const items = await CartService.get(user.userId, tenantId)
     if (!items.length) return reply.code(400).send({ error: 'Cart is empty' })
-    const order = await checkoutSaga({ tenantId, customerId: user.sub, currency: currency ?? 'USD', addressGeo: addressGeo as any, items, scheduledSlotId })
-    await CartService.clear(user.sub, tenantId)
+    const order = await checkoutSaga({ tenantId, customerId: user.userId, currency: currency ?? 'QAR', addressGeo: addressGeo as any, items, scheduledSlotId })
+    await CartService.clear(user.userId, tenantId)
     return reply.code(201).send(order)
   })
 
   app.get('/mine', { onRequest: [onlyRole('customer')] }, async (req) => {
-    const user = (req as any).user
+    const user = (req as any).sessionUser
     const { limit, offset } = parsePagination(req.query as any)
-    return OrderingService.listByCustomer(user.sub, limit, offset)
+    return OrderingService.listByCustomer(user.userId, limit, offset)
   })
 
   app.post('/:id/review', { onRequest: [onlyRole('customer')] }, async (req, reply) => {
     const { storeRating, riderRating, comment } = validate(reviewSchema, req.body)
-    const result = await OrderingService.submitReview((req.params as any).id, (req as any).user.sub, storeRating, riderRating, comment)
+    const result = await OrderingService.submitReview((req.params as any).id, (req as any).sessionUser.userId, storeRating, riderRating, comment)
     return reply.code(201).send(result)
+  })
+
+  // ── Admin: orders + payments across every tenant ──────────────────────────
+
+  app.get('/admin', { onRequest: [onlyRole('admin')] }, async (req) => {
+    const { paymentStatus } = req.query as any
+    const { limit, offset } = parsePagination(req.query as any)
+    return OrderingService.listAllForAdmin(paymentStatus || undefined, limit, offset)
   })
 
   // ── Shared: order detail + cancel ─────────────────────────────────────────
@@ -98,7 +106,7 @@ export const orderingRoutes: FastifyPluginAsync = async (app) => {
   )
 
   app.post('/:id/cancel', { onRequest: [authenticated] }, async (req, reply) => {
-    await OrderingService.cancel((req.params as any).id, (req as any).user.sub)
+    await OrderingService.cancel((req.params as any).id, (req as any).sessionUser.userId)
     return reply.send({ ok: true })
   })
 
@@ -117,7 +125,7 @@ export const orderingRoutes: FastifyPluginAsync = async (app) => {
     const { id } = req.params
     // setStatus and get run in parallel — status write doesn't need the order data
     const [, order] = await Promise.all([
-      OrderingService.setStatus(id, newStatus, req.user?.sub ?? 'manager'),
+      OrderingService.setStatus(id, newStatus, req.sessionUser?.userId ?? 'manager'),
       OrderingService.get(id),
     ])
     emit(eventName as any, {
@@ -137,7 +145,7 @@ export const orderingRoutes: FastifyPluginAsync = async (app) => {
   app.post('/:id/ready',     { onRequest: [authenticated] }, managerTransition('ready',     Events.OrderReady))
 
   app.post('/:id/handoff', { onRequest: [authenticated] }, async (req, reply) => {
-    const result = await OrderingService.handoff((req.params as any).id, (req as any).sessionUser?.sub ?? 'manager')
+    const result = await OrderingService.handoff((req.params as any).id, (req as any).sessionUser?.userId ?? 'manager')
     return reply.send(result)
   })
 }

@@ -3,13 +3,14 @@ import { FastifyPluginAsync } from 'fastify'
 import { CatalogService } from './catalog.service'
 import { validate } from '../../platform/validate'
 import { onlyTenantRole } from '../../platform/rbac'
+import { TenantService } from '../tenant/tenant.service'
 
 const productSchema = z.object({
   name:        z.string().min(1).max(200),
   description: z.string().max(1000).optional(),
   mediaUrl:    z.string().url().optional(),
   priceMinor:  z.number().int().positive(),
-  currency:    z.string().length(3).default('USD'),
+  currency:    z.string().length(3).default('QAR'),
   categoryId:  z.string().uuid().optional(),
 })
 
@@ -42,6 +43,7 @@ export const catalogRoutes: FastifyPluginAsync = async (app) => {
     onRequest: [onlyTenantRole('manager', managerHook)],
   }, async (req, reply) => {
     const { tenantId } = req.params as any
+    await TenantService.assertCanSell(tenantId)
     const data = validate(productSchema, req.body)
     return reply.code(201).send(await CatalogService.createProduct(tenantId, data as any))
   })
@@ -50,6 +52,7 @@ export const catalogRoutes: FastifyPluginAsync = async (app) => {
     onRequest: [onlyTenantRole('manager', managerHook)],
   }, async (req) => {
     const { tenantId, id } = req.params as any
+    await TenantService.assertCanSell(tenantId)
     return CatalogService.updateProduct(tenantId, id, validate(productSchema.partial(), req.body) as any)
   })
 
@@ -74,6 +77,7 @@ export const catalogRoutes: FastifyPluginAsync = async (app) => {
     onRequest: [onlyTenantRole('manager', managerHook)],
   }, async (req, reply) => {
     const { tenantId } = req.params as any
+    await TenantService.assertCanSell(tenantId)
     const csv = (req.body as string) ?? ''
     const lines = csv.split('\n').map(l => l.trim()).filter(Boolean)
     if (lines.length < 2) return reply.code(400).send({ error: 'CSV must have a header row and at least one product row.' })
@@ -98,7 +102,7 @@ export const catalogRoutes: FastifyPluginAsync = async (app) => {
       const p = await CatalogService.createProduct(tenantId, {
         tenantId, name, description,
         priceMinor: Math.round(price * 100),
-        currency: 'USD',
+        currency: 'QAR',
         categoryId,
       } as any)
       created.push(p)

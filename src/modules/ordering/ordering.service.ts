@@ -1,11 +1,21 @@
 import { randomUUID } from 'crypto'
-import { and, desc, eq, sql } from 'drizzle-orm'
+import { and, desc, eq, inArray, sql } from 'drizzle-orm'
 import { db } from '../../platform/db'
 import { emit, Events } from '../../platform/events'
 import { BillingService } from '../billing/billing.service'
-import { orders, orderLines, orderStatusHistory, stockReservations, inventory, payments, reviews } from '../../db/schema'
+import { PaymentsService } from '../payments/payments.service'
+import { orders, orderLines, orderStatusHistory, stockReservations, inventory, payments, reviews, stores, users } from '../../db/schema'
 
 type OrderStatus = typeof orders.$inferSelect['status']
+
+// Attaches each order's payment (for payment-status/refund badges) via a flat
+// second query rather than a join, so callers keep working with Order[]-shaped rows.
+async function withPayments<T extends { id: string }>(rows: T[]) {
+  if (!rows.length) return rows
+  const pays = await db.select().from(payments).where(inArray(payments.orderId, rows.map(r => r.id)))
+  const byOrder = new Map(pays.map(p => [p.orderId, p]))
+  return rows.map(r => ({ ...r, payment: byOrder.get(r.id) ?? null }))
+}
 
 export const OrderingService = {
   async get(orderId: string) {
@@ -22,13 +32,33 @@ export const OrderingService = {
   async listByTenant(tenantId: string, status?: string, limit = 20, offset = 0) {
     const conds = [eq(orders.tenantId, tenantId)]
     if (status) conds.push(eq(orders.status, status as OrderStatus))
-    return db.select().from(orders).where(and(...conds))
+    const rows = await db.select().from(orders).where(and(...conds))
       .orderBy(desc(orders.placedAt)).limit(limit).offset(offset)
+    return withPayments(rows)
   },
 
   async listByCustomer(customerId: string, limit = 20, offset = 0) {
-    return db.select().from(orders).where(eq(orders.customerId, customerId))
+    const rows = await db.select().from(orders).where(eq(orders.customerId, customerId))
       .orderBy(desc(orders.placedAt)).limit(limit).offset(offset)
+    return withPayments(rows)
+  },
+
+  /** Admin-wide order + payment view, across every tenant. */
+  async listAllForAdmin(paymentStatus?: string, limit = 20, offset = 0) {
+    const conds = paymentStatus ? [eq(payments.status, paymentStatus as typeof payments.$inferSelect['status'])] : []
+    return db.select({
+      order:         orders,
+      payment:       payments,
+      storeName:     stores.name,
+      customerEmail: users.email,
+    })
+      .from(orders)
+      .leftJoin(payments, eq(payments.orderId, orders.id))
+      .leftJoin(stores, eq(stores.id, orders.tenantId))
+      .leftJoin(users, eq(users.id, orders.customerId))
+      .where(conds.length ? and(...conds) : undefined)
+      .orderBy(desc(orders.placedAt))
+      .limit(limit).offset(offset)
   },
 
   async setStatus(orderId: string, status: OrderStatus, actor: string) {
@@ -69,6 +99,9 @@ export const OrderingService = {
         tenantId: order.tenantId, payload: { orderId },
       })
     })
+
+    // Outside the transaction — an external Stripe call shouldn't hold the DB lock.
+    await PaymentsService.voidIntent(orderId)
   },
 
   async submitReview(orderId: string, customerId: string, storeRating: number, riderRating?: number, comment?: string) {

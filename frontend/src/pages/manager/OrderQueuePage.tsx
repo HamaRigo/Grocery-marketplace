@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ordersApi, type Order } from '../../api/orders'
 import { useAuth } from '../../context/auth'
 import Badge from '../../components/Badge'
+import { formatMinor } from '../../lib/money'
 
 const COLUMNS: Array<{ status: string; label: string; actions: string[] }> = [
   { status: 'placed',    label: 'New',       actions: ['accept', 'reject'] },
@@ -61,17 +62,22 @@ function OrderCard({ order, actions, onAction, onHandoff }: {
             </p>
           )}
           <p className="text-xs text-gray-400 mt-0.5 capitalize">
-            Pay: {order.paymentMethod}
+            Pay: {order.paymentMethod}{order.payment ? ` (${order.payment.status})` : ''}
           </p>
         </div>
       ) : (
-        <p className="text-sm font-medium text-gray-800 mb-1 truncate">
-          {(order as any).addressGeo?.address ?? 'Delivery'}
-        </p>
+        <>
+          <p className="text-sm font-medium text-gray-800 mb-1 truncate">
+            {(order as any).addressGeo?.address ?? 'Delivery'}
+          </p>
+          {order.payment && (
+            <p className="text-xs text-gray-400 mb-1 capitalize">Payment: {order.payment.status}</p>
+          )}
+        </>
       )}
 
       <p className="text-sm font-semibold text-green-700 mb-2">
-        ${(order.totalMinor / 100).toFixed(2)}
+        {formatMinor(order.totalMinor)}
       </p>
 
       <div className="flex flex-wrap gap-1">
@@ -186,7 +192,7 @@ export default function OrderQueuePage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-semibold text-green-700">
-                    ${(order.totalMinor / 100).toFixed(2)}
+                    {formatMinor(order.totalMinor)}
                   </span>
                   <Badge status={order.status} />
                 </div>

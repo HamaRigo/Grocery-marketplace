@@ -6,6 +6,7 @@ import { cartApi, type CartLine } from '../../api/cart'
 import { ordersApi } from '../../api/orders'
 import { schedulingApi } from '../../api/scheduling'
 import { useAuth } from '../../context/auth'
+import { formatMinor } from '../../lib/money'
 
 export default function CartPage() {
   const { tenantId } = useParams<{ tenantId: string }>()
@@ -41,7 +42,7 @@ export default function CartPage() {
     mutationFn: () => ordersApi.checkout(tenantId!, address, cart!.lines, slotId || undefined),
     onSuccess: (order) => {
       qc.invalidateQueries({ queryKey: ['cart', tenantId] })
-      navigate(`/orders/${order.id}/track`)
+      navigate(`/checkout/${order.id}`)
     },
     onError: (err) => setError((err as Error).message),
   })
@@ -68,12 +69,12 @@ export default function CartPage() {
             <div>
               <p className="font-medium text-gray-900">{line.name}</p>
               <p className="text-sm text-gray-500">
-                ${(line.priceMinor / 100).toFixed(2)} × {line.qty}
+                {formatMinor(line.priceMinor)} × {line.qty}
               </p>
             </div>
             <div className="flex items-center gap-3">
               <span className="font-semibold text-green-700">
-                ${(line.priceMinor * line.qty / 100).toFixed(2)}
+                {formatMinor(line.priceMinor * line.qty)}
               </span>
               <button onClick={() => removeLine(line.productId)} className="text-red-400 hover:text-red-600 text-sm">
                 {t('common.cancel')}
@@ -87,7 +88,7 @@ export default function CartPage() {
         <div className="bg-white rounded-xl border p-5 space-y-4">
           <div className="flex justify-between font-semibold">
             <span>{t('cart.total')}</span>
-            <span className="text-green-700">${(total / 100).toFixed(2)}</span>
+            <span className="text-green-700">{formatMinor(total)}</span>
           </div>
 
           {error && (

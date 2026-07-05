@@ -1,5 +1,20 @@
+import { z } from 'zod'
 import { FastifyPluginAsync } from 'fastify'
 import { BillingService } from './billing.service'
+import { SubscriptionsService } from './subscriptions.service'
+import { onlyRole, adminOrTenantManager } from '../../platform/rbac'
+import { validate } from '../../platform/validate'
+
+const tenantIdParam = (req: any) => req.params.tenantId
+
+const priceSchema = z.object({
+  amountMinor: z.number().int().nonnegative(),
+  currency:    z.string().length(3).default('QAR'),
+})
+
+const refundSchema = z.object({
+  amountMinor: z.number().int().positive().optional(),
+})
 
 export const billingRoutes: FastifyPluginAsync = async (app) => {
   // ── Commission settlements (admin) ────────────────────────────────────────
@@ -12,26 +27,32 @@ export const billingRoutes: FastifyPluginAsync = async (app) => {
     BillingService.markSettlementPaid((req.params as any).id)
   )
 
-  // ── Subscriptions ─────────────────────────────────────────────────────────
-  app.get('/subscriptions/:tenantId', { onRequest: [app.authenticate] }, async (req) =>
+  // ── Subscriptions (admin, or the tenant's own manager) ────────────────────
+  app.get('/subscriptions', { onRequest: [onlyRole('admin')] }, async () =>
+    SubscriptionsService.listAll()
+  )
+
+  app.get('/subscriptions/:tenantId', { onRequest: [adminOrTenantManager(tenantIdParam)] }, async (req) =>
     BillingService.getSubscription((req.params as any).tenantId)
   )
 
-  app.put('/subscriptions/:tenantId', { onRequest: [app.authenticate] }, async (req) => {
-    const { plan } = req.body as any
-    return BillingService.upsertSubscription((req.params as any).tenantId, plan)
+  app.post('/subscriptions/:tenantId/checkout-session', { onRequest: [adminOrTenantManager(tenantIdParam)] }, async (req) =>
+    SubscriptionsService.createCheckoutSession((req.params as any).tenantId)
+  )
+
+  app.post('/subscriptions/:tenantId/portal-session', { onRequest: [adminOrTenantManager(tenantIdParam)] }, async (req) =>
+    SubscriptionsService.createPortalSession((req.params as any).tenantId)
+  )
+
+  app.patch('/subscriptions/:tenantId/price', { onRequest: [onlyRole('admin')] }, async (req) => {
+    const { amountMinor, currency } = validate(priceSchema, req.body)
+    return SubscriptionsService.setPrice((req.params as any).tenantId, amountMinor, currency ?? 'QAR')
   })
 
-  app.post('/subscriptions/:tenantId/charge', { onRequest: [app.authenticate] }, async (req) =>
-    BillingService.chargeSubscription((req.params as any).tenantId)
-  )
-
-  app.delete('/subscriptions/:tenantId', { onRequest: [app.authenticate] }, async (req) =>
-    BillingService.cancelSubscription((req.params as any).tenantId)
-  )
-
-  // ── Refund (admin / manager) ──────────────────────────────────────────────
-  app.post('/refund/:orderId', { onRequest: [app.authenticate] }, async (req) =>
-    BillingService.refund((req.params as any).orderId)
-  )
+  // ── Refund (admin only — real orders can span any tenant) ─────────────────
+  app.post('/refund/:orderId', { onRequest: [onlyRole('admin')] }, async (req) => {
+    const { amountMinor } = validate(refundSchema, req.body ?? {})
+    const admin = (req as any).sessionUser
+    return BillingService.refund((req.params as any).orderId, amountMinor, admin?.userId)
+  })
 }

@@ -2,13 +2,8 @@ import { randomUUID } from 'crypto'
 import { and, between, eq, isNull } from 'drizzle-orm'
 import { db } from '../../platform/db'
 import { emit, Events } from '../../platform/events'
-import { commissionSettlements, subscriptions, stores, orders, payments } from '../../db/schema'
-
-const PLANS = {
-  free:     { amountMinor: 0,    currency: 'USD' },
-  standard: { amountMinor: 1000, currency: 'USD' }, // $10 / month
-  premium:  { amountMinor: 2500, currency: 'USD' }, // $25 / month
-} as const
+import { stripe } from '../payments/payments.service'
+import { commissionSettlements, subscriptions, stores, orders, payments, refunds } from '../../db/schema'
 
 export const BillingService = {
   // ── Commission ────────────────────────────────────────────────────────────
@@ -58,74 +53,58 @@ export const BillingService = {
     return sub ?? null
   },
 
-  async upsertSubscription(tenantId: string, plan: keyof typeof PLANS) {
-    const { amountMinor, currency } = PLANS[plan]
-    const currentPeriodEnd = new Date()
-    currentPeriodEnd.setMonth(currentPeriodEnd.getMonth() + 1)
-
-    const existing = await BillingService.getSubscription(tenantId)
-    if (existing) {
-      const [sub] = await db.update(subscriptions)
-        .set({ plan, amountMinor, status: 'active', currentPeriodEnd })
-        .where(eq(subscriptions.tenantId, tenantId)).returning()
-      return sub
-    }
-    const [sub] = await db.insert(subscriptions)
-      .values({ tenantId, plan, amountMinor, currency, status: 'active', currentPeriodEnd })
-      .returning()
-    return sub
-  },
-
-  async chargeSubscription(tenantId: string) {
-    const sub = await BillingService.getSubscription(tenantId)
-    if (!sub || sub.amountMinor === 0) return { message: 'Free tier — no charge' }
-
-    // Stub: swap for real gateway call
-    const [payment] = await db.insert(payments).values({
-      tenantId, type: 'subscription',
-      gatewayRef: `stub_sub_${randomUUID()}`,
-      amountMinor: sub.amountMinor,
-      status: 'captured',
-    }).returning()
-
-    const nextPeriodEnd = new Date(sub.currentPeriodEnd ?? new Date())
-    nextPeriodEnd.setMonth(nextPeriodEnd.getMonth() + 1)
-    await db.update(subscriptions)
-      .set({ status: 'active', currentPeriodEnd: nextPeriodEnd })
-      .where(eq(subscriptions.tenantId, tenantId))
-
-    emit(Events.SubscriptionPaymentSucceeded, {
-      eventId: randomUUID(), occurredAt: new Date().toISOString(),
-      tenantId, payload: { tenantId, amountMinor: sub.amountMinor },
-    })
-    return payment
-  },
-
-  async cancelSubscription(tenantId: string) {
-    const [sub] = await db.update(subscriptions)
-      .set({ status: 'cancelled' })
-      .where(eq(subscriptions.tenantId, tenantId))
-      .returning()
-    emit(Events.SubscriptionPaymentFailed, {
-      eventId: randomUUID(), occurredAt: new Date().toISOString(),
-      tenantId, payload: { tenantId },
-    })
-    return sub
-  },
-
   // ── Refund ────────────────────────────────────────────────────────────────
 
-  async refund(orderId: string) {
+  /** Full refund when amountMinor is omitted, partial otherwise. */
+  async refund(orderId: string, amountMinor: number | undefined, actor: string | undefined) {
     const [payment] = await db.select().from(payments)
       .where(and(eq(payments.orderId, orderId), eq(payments.status, 'captured')))
     if (!payment) throw Object.assign(new Error('No captured payment to refund'), { statusCode: 400 })
 
+    const remaining = payment.amountMinor - payment.refundedMinor
+    const refundAmount = amountMinor ?? remaining
+    if (refundAmount <= 0 || refundAmount > remaining)
+      throw Object.assign(new Error(`Refund amount must be between 1 and ${remaining} minor units`), { statusCode: 400 })
+
+    let stripeRefundId: string | undefined
+    if (payment.provider === 'stripe' && payment.stripePaymentIntentId) {
+      const refund = await stripe.refunds.create({
+        payment_intent: payment.stripePaymentIntentId,
+        amount: refundAmount,
+      }, { idempotencyKey: `refund-${payment.id}-${payment.refundedMinor}-${refundAmount}` })
+      stripeRefundId = refund.id
+    }
+    // Non-Stripe payments (cash/curbside) have no gateway to call — the refund
+    // is handed back to the customer in person; we just record it below.
+
+    const newRefundedMinor = payment.refundedMinor + refundAmount
+    const fullyRefunded = newRefundedMinor >= payment.amountMinor
+
     const [updated] = await db.update(payments)
-      .set({ status: 'refunded' }).where(eq(payments.id, payment.id)).returning()
+      .set({ status: fullyRefunded ? 'refunded' : 'partially_refunded', refundedMinor: newRefundedMinor })
+      .where(eq(payments.id, payment.id)).returning()
+
+    await db.insert(refunds).values({
+      paymentId: payment.id, stripeRefundId, amountMinor: refundAmount, actor,
+    })
+
+    // A full refund on an already-settled order reverses the commission via an
+    // offsetting ledger entry rather than rewriting settlement history.
+    if (fullyRefunded) {
+      const [settlement] = await db.select().from(commissionSettlements).where(eq(commissionSettlements.orderId, orderId))
+      if (settlement && settlement.amountMinor > 0) {
+        await db.insert(commissionSettlements).values({
+          tenantId: settlement.tenantId, orderId,
+          orderTotalMinor: -settlement.orderTotalMinor,
+          commissionBps:   settlement.commissionBps,
+          amountMinor:     -settlement.amountMinor,
+        })
+      }
+    }
 
     emit(Events.PaymentRefunded, {
       eventId: randomUUID(), occurredAt: new Date().toISOString(),
-      tenantId: payment.tenantId, payload: { orderId, amountMinor: payment.amountMinor },
+      tenantId: payment.tenantId, payload: { orderId, amountMinor: refundAmount },
     })
     return updated
   },

@@ -14,6 +14,7 @@ import { orderingRoutes }    from './modules/ordering/ordering.routes'
 import { fulfillmentRoutes } from './modules/fulfillment/fulfillment.routes'
 import { trackingRoutes }    from './modules/tracking/tracking.routes'
 import { billingRoutes }     from './modules/billing/billing.routes'
+import { paymentsRoutes }    from './modules/payments/payments.routes'
 import { reportingRoutes }     from './modules/reporting/reporting.routes'
 import { healthRoutes }         from './modules/health/health.routes'
 import { discoveryRoutes }      from './modules/discovery/discovery.routes'
@@ -63,6 +64,7 @@ export async function buildServer() {
   await app.register(fulfillmentRoutes, { prefix: '/fulfillment' })
   await app.register(trackingRoutes,    { prefix: '/tracking' })
   await app.register(billingRoutes,     { prefix: '/billing' })
+  await app.register(paymentsRoutes,    { prefix: '/payments' })
   await app.register(reportingRoutes,     { prefix: '/reports' })
   await app.register(healthRoutes)
   await app.register(discoveryRoutes,     { prefix: '/discovery' })
