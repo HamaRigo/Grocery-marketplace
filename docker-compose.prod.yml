@@ -24,6 +24,8 @@ services:
       test: [CMD-SHELL, "pg_isready -U ${POSTGRES_USER:-bakala}"]
       interval: 5s
       retries: 10
+    mem_limit: 512m
+    mem_reservation: 256m
 
   redis:
     image: redis:7-alpine
@@ -41,6 +43,8 @@ services:
       interval: 5s
       retries: 10
     env_file: .env.prod
+    mem_limit: 320m
+    mem_reservation: 128m
 
   elasticsearch:
     image: elasticsearch:8.13.4
@@ -55,6 +59,10 @@ services:
       test: [CMD-SHELL, "curl -sf http://localhost:9200/_cluster/health | grep -vq '\"status\":\"red\"'"]
       interval: 10s
       retries: 15
+    # Heap is capped at 256m above, but ES's off-heap/Lucene overhead needs
+    # real headroom on top of that — this is the single biggest container here.
+    mem_limit: 768m
+    mem_reservation: 512m
 
   # ── DB migration (runs once, exits 0 on success) ────────────────────────────
 
@@ -64,6 +72,7 @@ services:
     restart: "no"
     depends_on:
       postgres: { condition: service_healthy }
+    mem_limit: 256m
 
   # ── Application ─────────────────────────────────────────────────────────────
 
@@ -83,12 +92,15 @@ services:
       test: [CMD-SHELL, "wget -qO- http://localhost:3000/health || exit 1"]
       interval: 10s
       retries: 5
+    mem_limit: 350m
+    mem_reservation: 200m
 
   notifications-svc:
     <<: *api-base
     command: npx tsx src/services/notifications/index.ts
     depends_on:
       redis: { condition: service_healthy }
+    mem_limit: 200m
 
   tracking-svc:
     <<: *api-base
@@ -97,6 +109,7 @@ services:
       NODE_ENV: production
     depends_on:
       redis: { condition: service_healthy }
+    mem_limit: 200m
 
   discovery-svc:
     <<: *api-base
@@ -107,6 +120,8 @@ services:
       postgres:      { condition: service_healthy }
       redis:         { condition: service_healthy }
       elasticsearch: { condition: service_healthy }
+    mem_limit: 300m
+    mem_reservation: 150m
 
   frontend:
     build:
@@ -119,6 +134,7 @@ services:
       - '80:80'
     depends_on:
       api: { condition: service_healthy }
+    mem_limit: 64m
 
 volumes:
   pgdata:

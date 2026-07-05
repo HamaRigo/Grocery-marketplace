@@ -11,11 +11,14 @@
 #
 # What it does:
 #   1. Updates the system and installs Docker + Git
-#   2. Raises vm.max_map_count so Elasticsearch can boot
-#   3. Opens ports 80 and 443 in Ubuntu's iptables rules
-#   4. Clones the prod branch to /opt/bakala-shop
-#   5. Installs a systemd service so the Docker stack restarts on every reboot
-#   6. Starts the stack if .env.prod already exists, otherwise prints next steps
+#   2. Adds a 2 GB swapfile — this is a ~6 GB box running Postgres, Redis,
+#      Elasticsearch, and five Node containers; swap is the safety net for
+#      a transient spike, not something to rely on for steady-state load
+#   3. Raises vm.max_map_count so Elasticsearch can boot
+#   4. Opens ports 80 and 443 in Ubuntu's iptables rules
+#   5. Clones the prod branch to /opt/bakala-shop
+#   6. Installs a systemd service so the Docker stack restarts on every reboot
+#   7. Starts the stack if .env.prod already exists, otherwise prints next steps
 #
 # After the script finishes, SSH in and run:
 #   cp /opt/bakala-shop/.env.prod.example /opt/bakala-shop/.env.prod
@@ -34,7 +37,24 @@ apt-get update  -y
 apt-get upgrade -y
 apt-get install -y git curl iptables-persistent netfilter-persistent
 
-# ── 2. Docker Engine (skipped if already installed) ───────────────────────────
+# ── 2. Swap: 2 GB safety net on this memory-constrained box ──────────────────
+if [ -f /swapfile ]; then
+  echo "==> Swap: /swapfile already exists, skipping"
+else
+  echo "==> Creating 2 GB swapfile..."
+  fallocate -l 2G /swapfile
+  chmod 600 /swapfile
+  mkswap /swapfile
+  swapon /swapfile
+  echo '/swapfile none swap sw 0 0' >> /etc/fstab
+fi
+# Prefer swapping only under real memory pressure, not proactively —
+# containers should be evicted by their own mem_limit first, not by swap.
+sysctl -w vm.swappiness=10
+echo 'vm.swappiness=10' > /etc/sysctl.d/99-swappiness.conf
+echo "==> Swap: $(swapon --show=NAME,SIZE --noheadings | tr '\n' ' ')"
+
+# ── 3. Docker Engine (skipped if already installed) ───────────────────────────
 if ! command -v docker &>/dev/null; then
   echo "==> Installing Docker..."
   curl -fsSL https://get.docker.com | sh
@@ -42,7 +62,7 @@ fi
 systemctl enable --now docker
 usermod -aG docker ubuntu
 
-# ── 3. Docker Compose plugin (skipped if already installed) ───────────────────
+# ── 4. Docker Compose plugin (skipped if already installed) ───────────────────
 COMPOSE_BIN=/usr/local/lib/docker/cli-plugins/docker-compose
 if [ ! -f "$COMPOSE_BIN" ]; then
   echo "==> Installing Docker Compose plugin..."
@@ -55,14 +75,14 @@ if [ ! -f "$COMPOSE_BIN" ]; then
 fi
 echo "    docker compose $(docker compose version --short)"
 
-# ── 4. Kernel: raise vm.max_map_count for Elasticsearch ──────────────────────
+# ── 5. Kernel: raise vm.max_map_count for Elasticsearch ──────────────────────
 # ES 8.x refuses to start below 262144 (Ubuntu defaults to 65530) and fails
 # its bootstrap check, which blocks every service that depends on it.
 echo "vm.max_map_count=262144" > /etc/sysctl.d/99-elasticsearch.conf
 sysctl -w vm.max_map_count=262144
 echo "==> Kernel: vm.max_map_count set to 262144"
 
-# ── 5. Firewall: open ports 80 and 443 ───────────────────────────────────────
+# ── 6. Firewall: open ports 80 and 443 ───────────────────────────────────────
 # OCI instances run Ubuntu's iptables on top of the OCI Security List rules.
 # Both layers must allow a port for traffic to reach the container.
 open_port() {
@@ -75,7 +95,7 @@ open_port 443
 netfilter-persistent save
 echo "==> Firewall: ports 80 and 443 open"
 
-# ── 6. Clone / update the repo ────────────────────────────────────────────────
+# ── 7. Clone / update the repo ────────────────────────────────────────────────
 REPO_URL="https://github.com/HamaRigo/Grocery-marketplace.git"
 REPO_DIR="/opt/bakala-shop"
 
@@ -93,7 +113,7 @@ chown -R ubuntu:ubuntu "$REPO_DIR"
 chmod +x "$REPO_DIR/deploy.sh"
 echo "==> Repo ready at $REPO_DIR (branch: prod)"
 
-# ── 7. Systemd service — auto-start on every reboot ──────────────────────────
+# ── 8. Systemd service — auto-start on every reboot ──────────────────────────
 cat > /etc/systemd/system/bakala.service << 'SERVICE'
 [Unit]
 Description=Bakala Shop (Docker Compose)
@@ -129,7 +149,7 @@ systemctl daemon-reload
 systemctl enable bakala.service
 echo "==> systemd: bakala.service installed and enabled"
 
-# ── 8. First-run: start the stack only if .env.prod exists ───────────────────
+# ── 9. First-run: start the stack only if .env.prod exists ───────────────────
 ENV_FILE="$REPO_DIR/.env.prod"
 
 if [ -f "$ENV_FILE" ]; then
