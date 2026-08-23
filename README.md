@@ -1,6 +1,34 @@
-# Grocery Marketplace
+# Bakala Shop — Grocery Marketplace Platform
 
 A multi-vendor grocery delivery platform. Local supermarkets subscribe and run their own storefront; customers browse nearby stores, place orders, store managers prepare them, and riders deliver with live GPS tracking.
+
+## Recruiter Snapshot: AI, Retrieval, and Agentic Engineering
+
+This repository is a full-stack marketplace system built around the same engineering primitives used in production AI/agentic products: retrieval indexes, event-driven orchestration, stateful workflows, background workers, role-aware APIs, and independently extractable services.
+
+> Note: this codebase does **not** currently call an LLM or generate answers from retrieved context. The RAG-relevant part is the retrieval/search pipeline and event-fed read model that could be used as the retrieval layer for product search, customer support, store operations assistants, or order-status copilots.
+
+| Recruiter request | Relevant project evidence |
+| --- | --- |
+| RAG / retrieval pipelines | Elasticsearch-backed Discovery service with geo and text indexes for stores/products, event-fed projection updates, and search APIs. See [`src/modules/discovery/discovery.service.ts`](src/modules/discovery/discovery.service.ts) and [`src/services/discovery/index.ts`](src/services/discovery/index.ts). |
+| Multi-agent / agentic orchestration | Order checkout saga, dispatch engine, event consumers, outbox relay, and independently runnable services coordinate work across inventory, payments, fulfillment, tracking, discovery, and notifications. See [`src/modules/ordering/ordering.saga.ts`](src/modules/ordering/ordering.saga.ts), [`src/modules/fulfillment/fulfillment.service.ts`](src/modules/fulfillment/fulfillment.service.ts), [`src/platform/outbox-relay.ts`](src/platform/outbox-relay.ts), and [`src/platform/broker.ts`](src/platform/broker.ts). |
+| Hands-on AI/agentic direction | Built the operational substrate an AI agent would need: durable events, Redis Streams consumer groups, idempotent Stripe webhooks, role-based tools/actions, CQRS read models, WebSocket tracking, scheduled workers, and service extraction boundaries. |
+| Live product / app / website | Full local product is runnable with Docker Compose. Production deployment is documented for Oracle Cloud in [`docs/oracle-cloud-deploy.md`](docs/oracle-cloud-deploy.md). Public demo URL can be added here when deployed. |
+| Specific role and contribution | Solo full-stack engineering: backend architecture, database schema, API modules, event bus/outbox, Redis Streams broker, Elasticsearch discovery, Stripe payments/subscriptions, React role-based frontend, Docker deployment, CI, and tests. |
+
+### How I Would Present This to an AI/Agentic Recruiter
+
+- **Retrieval layer:** I designed and implemented the Discovery read model as an Elasticsearch projection fed by domain events. It supports store retrieval by location and product retrieval by text/category, which is the foundation needed before adding LLM answer generation.
+- **Agentic workflow orchestration:** I implemented long-running business workflows as sagas and event consumers instead of single request handlers. Checkout reserves stock, creates pending orders, waits for payment confirmation, and later triggers fulfillment, tracking, billing, and notification side effects through domain events.
+- **Multi-service coordination:** I built a modular monolith that can extract Discovery, Tracking, and Notifications into standalone Redis Streams consumers. This mirrors agent systems where specialized workers consume tasks/events and update shared state through contracts.
+- **Tool/action safety:** I added RBAC boundaries, Zod validation, payment recomputation from server-side product prices, webhook idempotency, inventory reservations with expiry, and compensation paths for cancellation/refund flows.
+
+### Links to Share
+
+- GitHub repository: `https://github.com/HamaRigo/Grocery-marketplace`
+- Architecture write-up: [`grocery-marketplace-architecture.md`](grocery-marketplace-architecture.md)
+- Deployment guide: [`docs/oracle-cloud-deploy.md`](docs/oracle-cloud-deploy.md)
+- Live demo: not public yet; production deployment guide included
 
 ## Architecture
 
