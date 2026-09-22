@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Bakala Shop — Business Proposal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    @page{size:A4;margin:2cm 2.5cm}
+    body{background:#fff;color:#1a1a2e}
+
+    .ar{font-family:'Amiri','Geeza Pro','DecoType Naskh',serif;direction:rtl;text-align:right;page-break-after:always}
+    .hi{font-family:'Noto Sans Devanagari','Kohinoor',sans-serif;direction:ltr;text-align:left;page-break-after:always}
+    .en{font-family:'Georgia','Times New Roman',serif;direction:ltr;text-align:left}
+
+    /* letterhead */
+    .lh{display:flex;align-items:flex-start;justify-content:space-between;padding-bottom:12px;margin-bottom:18px;border-bottom:3px solid #16a34a}
+    .bn{font-size:24pt;font-weight:700;color:#16a34a}
+    .bs{font-size:9pt;color:#6b7280;margin-top:2px}
+    .dm{font-size:9pt;color:#9ca3af;padding-top:4px;text-align:left}
+    .ar .dm{text-align:right}
+
+    /* sections */
+    .title{font-size:17pt;font-weight:700;color:#1a1a2e;margin-bottom:8px;line-height:1.5}
+
+    /* pain box */
+    .pain{background:#fef2f2;border-right:5px solid #dc2626;border-radius:6px;padding:13px 16px;margin-bottom:16px;font-size:12pt;line-height:1.95;color:#1a1a2e}
+    .hi .pain{border-right:none;border-left:5px solid #dc2626}
+
+    /* cost calculator */
+    .cost-box{background:#1a1a2e;color:#fff;border-radius:10px;padding:16px 20px;margin-bottom:18px}
+    .cost-title{font-size:12pt;font-weight:700;color:#fbbf24;margin-bottom:10px}
+    .cost-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #374151;font-size:11pt}
+    .cost-row:last-child{border-bottom:none;padding-top:10px}
+    .cost-label{color:#d1d5db}
+    .cost-val{font-weight:700;color:#f87171}
+    .cost-total{color:#fbbf24;font-size:13pt}
+
+    .intro{font-size:11.5pt;line-height:2;color:#374151;margin-bottom:20px}
+
+    /* steps */
+    .flow-h{font-size:13pt;font-weight:700;color:#15803d;background:#f0fdf4;border-radius:6px;padding:8px 13px;margin-bottom:12px}
+    .step{display:flex;align-items:flex-start;gap:12px;margin-bottom:11px}
+    .ar .step{flex-direction:row-reverse}
+    .sn{min-width:32px;height:32px;background:#16a34a;color:#fff;border-radius:50%;font-size:12pt;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .st{font-size:11pt;line-height:1.85;color:#374151;padding-top:4px}
+    .st strong{color:#15803d;display:block;font-size:11.5pt;margin-bottom:2px}
+
+    /* compare */
+    .ch{font-size:13pt;font-weight:700;color:#1a1a2e;border-bottom:1.5px solid #e5e7eb;padding-bottom:6px;margin:20px 0 12px}
+    table{width:100%;border-collapse:collapse;font-size:10.5pt;margin-bottom:20px}
+    thead tr{background:#1a1a2e;color:#fff}
+    thead th{padding:9px 12px;font-weight:700;font-size:11pt}
+    tbody tr:nth-child(odd){background:#f9fafb}
+    tbody td{padding:8px 12px;line-height:1.65;color:#374151;border-bottom:1px solid #e5e7eb}
+    .bad{color:#dc2626;font-weight:700}
+    .good{color:#16a34a;font-weight:700}
+
+    /* package box */
+    .pkg{background:#f0fdf4;border:2px solid #16a34a;border-radius:10px;padding:16px 18px;margin-bottom:18px}
+    .pkg-title{font-size:13pt;font-weight:700;color:#15803d;margin-bottom:10px}
+    .pkg-item{display:flex;align-items:flex-start;gap:9px;margin-bottom:7px;font-size:11pt;line-height:1.8;color:#374151}
+    .ar .pkg-item{flex-direction:row-reverse;text-align:right}
+    .check{color:#16a34a;font-size:13pt;font-weight:700;flex-shrink:0}
+
+    /* numbers strip */
+    .nums{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+    .num-card{flex:1;min-width:120px;background:#1a1a2e;border-radius:8px;padding:12px 14px;text-align:center}
+    .num-val{font-size:20pt;font-weight:700;color:#4ade80;line-height:1.2}
+    .num-lbl{font-size:9pt;color:#9ca3af;margin-top:3px;line-height:1.4}
+
+    /* guarantee */
+    .guar{background:linear-gradient(135deg,#14532d 0%,#166534 100%);border-radius:12px;padding:20px 22px;margin-bottom:18px;color:#fff}
+    .guar-badge{display:inline-block;background:#fbbf24;color:#1a1a2e;font-size:9pt;font-weight:700;padding:3px 12px;border-radius:99px;margin-bottom:10px}
+    .guar-title{font-size:15pt;font-weight:700;color:#bbf7d0;margin-bottom:8px;line-height:1.4}
+    .guar-body{font-size:11pt;line-height:1.95;color:#d1fae5}
+    .guar-points{margin-top:10px}
+    .guar-pt{display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;font-size:11pt;color:#d1fae5}
+    .ar .guar-pt{flex-direction:row-reverse}
+    .star{color:#fbbf24;font-size:12pt;flex-shrink:0}
+
+    /* urgency */
+    .urgency{background:#fef9c3;border:2px solid #eab308;border-radius:8px;padding:13px 16px;margin-bottom:16px;font-size:11.5pt;line-height:1.9;color:#1a1a2e}
+
+    /* CTA */
+    .cta{background:#1a1a2e;border-radius:10px;padding:18px 20px;color:#fff;font-size:11.5pt;line-height:1.95;margin-bottom:18px}
+    .cta-title{font-size:14pt;font-weight:700;color:#4ade80;margin-bottom:8px}
+
+    /* sig */
+    .sig{padding-top:14px;border-top:1.5px solid #e5e7eb}
+    .sn2{font-size:14pt;font-weight:700;color:#1a1a2e}
+    .st2{font-size:10pt;color:#6b7280;margin-top:2px}
+    .sc{font-size:10pt;color:#16a34a;margin-top:2px}
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════ ARABIC ═══ -->
+<div class="ar">
+
+  <div class="lh">
+    <div class="dm">١٣ يونيو ٢٠٢٦</div>
+    <div><div class="bn">بكالة شوب</div><div class="bs">متجرك الرقمي — في جيب كل عميل</div></div>
+  </div>
+
+  <p class="title">عزيزي صاحب المتجر،</p>
+
+  <div class="pain">
+    الآن، في هذه اللحظة، عملاؤك يطلبون عبر واتساب رسائل ناقصة لا تحتوي على الأصناف
+    الكاملة، ولا الكميات الدقيقة، ولا حتى العنوان الصحيح أحياناً. وأنت أو موظفوك
+    تقضون ساعات يومياً في الرد والتأكيد والتصحيح — بينما المبيعات التي يمكن
+    كسبها تمرّ أمامكم وتذهب إلى منافس أذكى.
+  </div>
+
+  <div class="cost-box">
+    <p class="cost-title">⟵ حساب ما تخسره يومياً بدون التطبيق</p>
+    <div class="cost-row"><span class="cost-label">وقت الرد على رسائل واتساب يومياً</span><span class="cost-val">٢ – ٣ ساعات</span></div>
+    <div class="cost-row"><span class="cost-label">طلبات تُلغى أو تُخطئ بسبب عدم الوضوح</span><span class="cost-val">١٥ – ٢٠٪ من الطلبات</span></div>
+    <div class="cost-row"><span class="cost-label">متوسط ما يطلبه العميل حين لا يرى الكتالوج كاملاً</span><span class="cost-val">أقل بـ ٣٥٪</span></div>
+    <div class="cost-row"><span class="cost-label">عملاء لا يكرّرون الطلب بسبب صعوبة التجربة</span><span class="cost-val">كل ٣ من ٥</span></div>
+    <div class="cost-row"><span class="cost-label" style="color:#fbbf24;font-weight:700">الثمن الحقيقي لكل يوم بدون تطبيق</span><span class="cost-total">أرباح ضائعة</span></div>
+  </div>
+
+  <p class="intro">
+    الحل ليس إرسال صور أكثر على واتساب — الحل هو تجربة شراء احترافية كاملة
+    تضع متجرك بين يدي كل عميل، تحت سيطرتك الكاملة، وبلا جهد إضافي منك.
+    هذا بالضبط ما يفعله <strong>Bakala Shop</strong>.
+  </p>
+
+  <p class="flow-h">كيف تتحوّل في ٤ خطوات فقط</p>
+
+  <div class="step"><div class="sn">١</div><div class="st"><strong>أرسل رابط متجرك عبر واتساب</strong>رسالة واحدة لعملائك الحاليين — أو اقتراح تلقائي عبر واتساب للأعمال. هذا كل ما تفعله.</div></div>
+  <div class="step"><div class="sn">٢</div><div class="st"><strong>العميل يرى كل شيء ويطلب فوراً</strong>يفتح الرابط، يدخل رقم هاتفه، ويتصفح جميع منتجاتك بالصور والأسعار. يختار ما يريد ويضغط "اطلب" — بدون أي تعقيد.</div></div>
+  <div class="step"><div class="sn">٣</div><div class="st"><strong>الطلب يصلك كاملاً — جاهز للتحضير</strong>الأصناف، الكميات، موقع GPS للعميل، وكل التفاصيل تظهر فوراً في لوحتك. لا رسائل، لا مكالمات. فقط اعمل.</div></div>
+  <div class="step"><div class="sn">٤</div><div class="st"><strong>المندوب يوصّل والعميل يتابع حياً</strong>المندوب يتلقى الطريق مباشرة. العميل يرى مكانه على الخريطة في الوقت الفعلي. تجربة توصيل لا تُنسى.</div></div>
+
+  <p class="ch">واتساب مقابل Bakala Shop</p>
+  <table>
+    <thead><tr><th>الجانب</th><th>واتساب</th><th>Bakala Shop</th></tr></thead>
+    <tbody>
+      <tr><td>عرض المنتجات</td><td class="bad">رسائل ناقصة وصور متفرقة</td><td class="good">كتالوج مرئي كامل بالأسعار</td></tr>
+      <tr><td>دقة الطلب</td><td class="bad">١٥–٢٠٪ أخطاء وإلغاءات</td><td class="good">دقة ١٠٠٪ تلقائية</td></tr>
+      <tr><td>موقع التسليم</td><td class="bad">يُرسَل يدوياً أو يُنسى</td><td class="good">GPS تلقائي ودقيق</td></tr>
+      <tr><td>تتبع التوصيل</td><td class="bad">غائب تماماً</td><td class="good">خريطة حية للجميع</td></tr>
+      <tr><td>وقت الموظف</td><td class="bad">ساعتان يومياً على الأقل</td><td class="good">صفر — كل شيء تلقائي</td></tr>
+      <tr><td>متوسط قيمة الطلب</td><td class="bad">أقل — العميل لا يرى كل شيء</td><td class="good">أعلى بـ ٣٥٪ في المتوسط</td></tr>
+      <tr><td>التوسع</td><td class="bad">محدود بطاقة الرد اليدوي</td><td class="good">عشرات الطلبات في آنٍ واحد</td></tr>
+    </tbody>
+  </table>
+
+  <div class="nums">
+    <div class="num-card"><div class="num-val">+٣٥٪</div><div class="num-lbl">ارتفاع متوسط قيمة الطلب عند رؤية الكتالوج كاملاً</div></div>
+    <div class="num-card"><div class="num-val">-٩٠٪</div><div class="num-lbl">انخفاض في أخطاء الطلبات وحالات الإلغاء</div></div>
+    <div class="num-card"><div class="num-val">٣×</div><div class="num-lbl">معدل تكرار الشراء بعد تجربة التتبع الحي</div></div>
+    <div class="num-card"><div class="num-val">٣ ساعات</div><div class="num-lbl">يومياً يستعيدها فريقك من إدارة واتساب</div></div>
+  </div>
+
+  <div class="pkg">
+    <p class="pkg-title">ما تحصل عليه بالكامل عند الانضمام</p>
+    <div class="pkg-item"><span class="check">✓</span><span>إعداد متجرك الرقمي الكامل — نحن نتولى كل شيء عنك</span></div>
+    <div class="pkg-item"><span class="check">✓</span><span>كتالوج منتجاتك بالصور والأسعار جاهز للتصفح</span></div>
+    <div class="pkg-item"><span class="check">✓</span><span>لوحة تحكم لإدارة الطلبات في الوقت الفعلي</span></div>
+    <div class="pkg-item"><span class="check">✓</span><span>تطبيق المندوب مع خريطة التوصيل الحية</span></div>
+    <div class="pkg-item"><span class="check">✓</span><span>تتبع مباشر للعميل يعزز الثقة ويُقلّص الشكاوى</span></div>
+    <div class="pkg-item"><span class="check">✓</span><span>دعم فني كامل — نحن معك في كل خطوة</span></div>
+    <div class="pkg-item"><span class="check">✓</span><span>تقارير مبيعات يومية وشهرية لمتابعة نموك</span></div>
+  </div>
+
+  <div class="guar">
+    <span class="guar-badge">ضمان مكتوب</span>
+    <p class="guar-title">٣٠ يوماً مجاناً — بدون مخاطرة، بدون تعهدات</p>
+    <p class="guar-body">
+      نحن واثقون تماماً من النتائج لدرجة أننا نقدم لك ٣٠ يوماً كاملة مجاناً
+      بدون أي بطاقة ائتمانية أو التزام مسبق. جرّب التطبيق مع عملائك الحقيقيين
+      وشاهد الفرق بنفسك.
+    </p>
+    <div class="guar-points">
+      <div class="guar-pt"><span class="star">★</span><span>إذا لم تزِد طلباتك خلال ٣٠ يوماً — لا تدفع شيئاً</span></div>
+      <div class="guar-pt"><span class="star">★</span><span>إلغاء في أي وقت بضغطة واحدة — بدون أي رسوم</span></div>
+      <div class="guar-pt"><span class="star">★</span><span>الإعداد الكامل مجاناً — لا تصرف دينار واحد حتى ترى النتائج</span></div>
+    </div>
+  </div>
+
+  <div class="urgency">
+    <strong>⏳ عرض محدود — للمتاجر الأوائل في منطقتك فقط:</strong> نحن نقبل حالياً عدداً
+    محدوداً من المتاجر في كل منطقة لضمان أفضل خدمة. المتجر الذي ينضم أولاً
+    يحجز موقعه في السوق الرقمي المحلي قبل المنافسين.
+  </div>
+
+  <div class="cta">
+    <p class="cta-title">خطوة واحدة تفصلك عن متجر رقمي كامل</p>
+    <p>تواصل معنا اليوم على واتساب أو البريد الإلكتروني — وخلال ٢٤ ساعة يكون
+    متجرك جاهزاً. أرسل الرابط لعملائك، واستقبل أول طلب منظّم وكامل.
+    ليس عليك أن تغيّر طريقة عمل عملائك — فقط أعطهم رابطاً واحداً على واتساب
+    وهم سيفعلون الباقي.</p>
+  </div>
+
+  <div class="sig">
+    <div class="sn2">محمد بوعلاقي</div>
+    <div class="st2">مؤسس ومطوّر منصة Bakala Shop</div>
+    <div class="sc">mohamed.bouallagui001@gmail.com</div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════ HINDI ═══ -->
+<div class="hi">
+
+  <div class="lh">
+    <div><div class="bn">Bakala Shop</div><div class="bs">आपका डिजिटल स्टोर — हर ग्राहक की जेब में</div></div>
+    <div class="dm">१३ जून, २०२६</div>
+  </div>
+
+  <p class="title">प्रिय स्टोर स्वामी,</p>
+
+  <div class="pain">
+    इस समय, आपके ग्राहक WhatsApp पर अधूरे संदेश भेज रहे हैं — न पूरे सामान की
+    सूची, न सही मात्रा, न कभी-कभी सही पता। आप या आपके कर्मचारी रोज़ घंटों
+    जवाब देने, पुष्टि करने और गलतियाँ सुधारने में बिता रहे हैं — जबकि वे बिक्री
+    जो हो सकती थीं, एक चतुर प्रतिस्पर्धी के पास चली जा रही हैं।
+  </div>
+
+  <div class="cost-box">
+    <p class="cost-title">⟶ बिना ऐप के आप रोज़ क्या खो रहे हैं</p>
+    <div class="cost-row"><span class="cost-label">WhatsApp संदेशों पर रोज़ बर्बाद समय</span><span class="cost-val">२ – ३ घंटे</span></div>
+    <div class="cost-row"><span class="cost-label">अस्पष्टता के कारण रद्द या गलत ऑर्डर</span><span class="cost-val">१५ – २०%</span></div>
+    <div class="cost-row"><span class="cost-label">पूरा कैटलॉग न दिखने से औसत ऑर्डर का नुकसान</span><span class="cost-val">३५% कम</span></div>
+    <div class="cost-row"><span class="cost-label">मुश्किल अनुभव से दोबारा न आने वाले ग्राहक</span><span class="cost-val">५ में से ३</span></div>
+    <div class="cost-row"><span class="cost-label" style="color:#fbbf24;font-weight:700">बिना ऐप के हर दिन की असली कीमत</span><span class="cost-total">खोया हुआ मुनाफ़ा</span></div>
+  </div>
+
+  <p class="intro">
+    समाधान WhatsApp पर और अधिक फोटो भेजना नहीं है — समाधान एक पेशेवर
+    खरीदारी का अनुभव है जो आपके स्टोर को हर ग्राहक की मुट्ठी में रखे, आपके
+    पूरे नियंत्रण में, बिना किसी अतिरिक्त मेहनत के। यही करता है <strong>Bakala Shop</strong>।
+  </p>
+
+  <p class="flow-h">केवल ४ कदमों में परिवर्तन</p>
+
+  <div class="step"><div class="sn">१</div><div class="st"><strong>WhatsApp पर अपने स्टोर का लिंक भेजें</strong>अपने मौजूदा ग्राहकों को एक संदेश — या WhatsApp Business के ज़रिए स्वचालित सुझाव। बस इतना करना है आपको।</div></div>
+  <div class="step"><div class="sn">२</div><div class="st"><strong>ग्राहक सब देखे और तुरन्त ऑर्डर करे</strong>लिंक खोले, मोबाइल नम्बर डाले, और आपके सभी उत्पाद फोटो व कीमतों के साथ देखे। जो चाहिए चुने, "ऑर्डर करें" दबाए — कोई झंझट नहीं।</div></div>
+  <div class="step"><div class="sn">३</div><div class="st"><strong>ऑर्डर आपके पास पूरा और तैयार पहुँचे</strong>सामान, मात्रा, ग्राहक का GPS पता — सब कुछ तुरन्त आपके डैशबोर्ड पर। कोई संदेश नहीं, कोई कॉल नहीं। बस काम करें।</div></div>
+  <div class="step"><div class="sn">४</div><div class="st"><strong>राइडर डिलीवर करे — ग्राहक नक्शे पर देखे</strong>राइडर को सीधे रूट मिले। ग्राहक वास्तविक समय में राइडर को अपनी ओर आते देखे। एक अविस्मरणीय अनुभव।</div></div>
+
+  <p class="ch">WhatsApp बनाम Bakala Shop</p>
+  <table>
+    <thead><tr><th>पहलू</th><th>WhatsApp</th><th>Bakala Shop</th></tr></thead>
+    <tbody>
+      <tr><td>उत्पाद प्रदर्शन</td><td class="bad">अधूरे संदेश, बिखरी फोटो</td><td class="good">कीमतों सहित पूरा विज़ुअल कैटलॉग</td></tr>
+      <tr><td>ऑर्डर की सटीकता</td><td class="bad">१५–२०% गलतियाँ व रद्दीकरण</td><td class="good">१००% स्वचालित सटीकता</td></tr>
+      <tr><td>डिलीवरी पता</td><td class="bad">मैन्युअल या कभी-कभी भुला दिया</td><td class="good">स्वचालित सटीक GPS</td></tr>
+      <tr><td>डिलीवरी ट्रैकिंग</td><td class="bad">बिल्कुल नहीं</td><td class="good">सभी के लिए लाइव मैप</td></tr>
+      <tr><td>कर्मचारी का समय</td><td class="bad">रोज़ कम से कम २ घंटे</td><td class="good">शून्य — सब स्वचालित</td></tr>
+      <tr><td>औसत ऑर्डर मूल्य</td><td class="bad">कम — ग्राहक सब नहीं देखता</td><td class="good">औसतन ३५% अधिक</td></tr>
+      <tr><td>विस्तार क्षमता</td><td class="bad">मैन्युअल जवाबों तक सीमित</td><td class="good">एकसाथ दर्जनों ऑर्डर</td></tr>
+    </tbody>
+  </table>
+
+  <div class="nums">
+    <div class="num-card"><div class="num-val">+३५%</div><div class="num-lbl">पूरा कैटलॉग देखने पर औसत ऑर्डर मूल्य में वृद्धि</div></div>
+    <div class="num-card"><div class="num-val">-९०%</div><div class="num-lbl">ऑर्डर गलतियों और रद्दीकरण में कमी</div></div>
+    <div class="num-card"><div class="num-val">३×</div><div class="num-lbl">लाइव ट्रैकिंग के बाद पुनः खरीद की दर</div></div>
+    <div class="num-card"><div class="num-val">३ घंटे</div><div class="num-lbl">रोज़ आपकी टीम WhatsApp से वापस पाए</div></div>
+  </div>
+
+  <div class="pkg">
+    <p class="pkg-title">जुड़ने पर आपको पूरा मिलता है</p>
+    <div class="pkg-item"><span class="check">✓</span><span>आपका पूरा डिजिटल स्टोर सेटअप — हम सब करते हैं</span></div>
+    <div class="pkg-item"><span class="check">✓</span><span>फोटो और कीमतों सहित आपका पूरा उत्पाद कैटलॉग</span></div>
+    <div class="pkg-item"><span class="check">✓</span><span>वास्तविक समय ऑर्डर प्रबंधन डैशबोर्ड</span></div>
+    <div class="pkg-item"><span class="check">✓</span><span>लाइव डिलीवरी मैप के साथ राइडर ऐप</span></div>
+    <div class="pkg-item"><span class="check">✓</span><span>ग्राहक लाइव ट्रैकिंग — भरोसा बढ़ाए, शिकायतें घटाए</span></div>
+    <div class="pkg-item"><span class="check">✓</span><span>पूर्ण तकनीकी सहायता — हम हर कदम पर आपके साथ</span></div>
+    <div class="pkg-item"><span class="check">✓</span><span>विकास की निगरानी के लिए दैनिक व मासिक बिक्री रिपोर्ट</span></div>
+  </div>
+
+  <div class="guar">
+    <span class="guar-badge">लिखित गारंटी</span>
+    <p class="guar-title">३० दिन निःशुल्क — कोई जोखिम नहीं, कोई प्रतिबद्धता नहीं</p>
+    <p class="guar-body">
+      हमें अपने परिणामों पर इतना भरोसा है कि हम आपको बिना किसी क्रेडिट कार्ड
+      या पूर्व प्रतिबद्धता के पूरे ३० दिन निःशुल्क देते हैं। अपने असली ग्राहकों
+      के साथ ऐप आज़माएँ और खुद फ़र्क देखें।
+    </p>
+    <div class="guar-points">
+      <div class="guar-pt"><span class="star">★</span><span>यदि ३० दिनों में आपके ऑर्डर नहीं बढ़े — एक पैसा नहीं देना</span></div>
+      <div class="guar-pt"><span class="star">★</span><span>कभी भी एक क्लिक में रद्द करें — कोई शुल्क नहीं</span></div>
+      <div class="guar-pt"><span class="star">★</span><span>पूरा सेटअप निःशुल्क — जब तक परिणाम न दिखें, एक रुपया नहीं</span></div>
+    </div>
+  </div>
+
+  <div class="urgency">
+    <strong>⏳ सीमित प्रस्ताव — केवल आपके क्षेत्र के शुरुआती स्टोरों के लिए:</strong> हम
+    सर्वोत्तम सेवा सुनिश्चित करने के लिए प्रत्येक क्षेत्र में सीमित संख्या में स्टोर
+    स्वीकार कर रहे हैं। जो स्टोर पहले जुड़ता है, वह प्रतिस्पर्धियों से पहले
+    स्थानीय डिजिटल बाज़ार में अपनी जगह सुरक्षित कर लेता है।
+  </div>
+
+  <div class="cta">
+    <p class="cta-title">एक कदम आपको पूरे डिजिटल स्टोर से अलग करता है</p>
+    <p>आज WhatsApp या ईमेल पर हमसे सम्पर्क करें — और २४ घंटों में आपका स्टोर
+    तैयार होगा। ग्राहकों को लिंक भेजें और पहला व्यवस्थित, पूर्ण ऑर्डर प्राप्त करें।
+    आपको अपने ग्राहकों की आदतें बदलने की ज़रूरत नहीं — बस उन्हें WhatsApp पर
+    एक लिंक दें, और वे बाकी काम खुद कर लेंगे।</p>
+  </div>
+
+  <div class="sig">
+    <div class="sn2">मुहम्मद बूअल्लागी</div>
+    <div class="st2">संस्थापक एवं डेवलपर — Bakala Shop</div>
+    <div class="sc">mohamed.bouallagui001@gmail.com</div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════ ENGLISH ═══ -->
+<div class="en">
+
+  <div class="lh">
+    <div><div class="bn">Bakala Shop</div><div class="bs">Your digital store — in every customer's pocket</div></div>
+    <div class="dm">June 13, 2026</div>
+  </div>
+
+  <p class="title">Dear Store Owner,</p>
+
+  <div class="pain">
+    Right now, your customers are sending you incomplete WhatsApp messages — no full item list,
+    no exact quantities, sometimes not even the right address. You and your staff are spending
+    hours every day replying, confirming, and correcting mistakes — while sales that could have
+    been yours walk straight to a smarter competitor.
+  </div>
+
+  <div class="cost-box">
+    <p class="cost-title">⟶ What you lose every single day without the app</p>
+    <div class="cost-row"><span class="cost-label">Time wasted on WhatsApp messages daily</span><span class="cost-val">2 – 3 hours</span></div>
+    <div class="cost-row"><span class="cost-label">Orders cancelled or wrong due to unclear messages</span><span class="cost-val">15 – 20%</span></div>
+    <div class="cost-row"><span class="cost-label">Average order value lost when customers can't see the full catalog</span><span class="cost-val">35% less</span></div>
+    <div class="cost-row"><span class="cost-label">Customers who don't come back after a frustrating experience</span><span class="cost-val">3 out of 5</span></div>
+    <div class="cost-row"><span class="cost-label" style="color:#fbbf24;font-weight:700">The real price of every day without the app</span><span class="cost-total">Lost profit</span></div>
+  </div>
+
+  <p class="intro">
+    The solution is not to send more photos on WhatsApp. The solution is a professional
+    shopping experience that puts your store in every customer's hands, under your full control,
+    with zero extra effort from you. That's exactly what <strong>Bakala Shop</strong> does.
+  </p>
+
+  <p class="flow-h">Transform your store in just 4 steps</p>
+
+  <div class="step"><div class="sn">1</div><div class="st"><strong>Send your store link via WhatsApp</strong>One message to your existing customers — or an automatic suggestion through WhatsApp Business. That's all you have to do.</div></div>
+  <div class="step"><div class="sn">2</div><div class="st"><strong>Customer sees everything and orders instantly</strong>They open the link, enter their phone number, and browse all your products with photos and prices. They pick what they want and tap "Order" — no confusion, no back-and-forth.</div></div>
+  <div class="step"><div class="sn">3</div><div class="st"><strong>A complete, ready-to-prepare order lands in your dashboard</strong>Items, quantities, customer's GPS location, and every detail appear instantly. No messages. No calls. Just work.</div></div>
+  <div class="step"><div class="sn">4</div><div class="st"><strong>Rider delivers — customer watches live</strong>The rider gets the route directly. The customer sees the rider moving toward them on a live map. A delivery experience they'll never forget — and always come back for.</div></div>
+
+  <p class="ch">WhatsApp vs. Bakala Shop</p>
+  <table>
+    <thead><tr><th>Area</th><th>WhatsApp</th><th>Bakala Shop</th></tr></thead>
+    <tbody>
+      <tr><td>Product display</td><td class="bad">Incomplete messages, scattered photos</td><td class="good">Full visual catalog with prices</td></tr>
+      <tr><td>Order accuracy</td><td class="bad">15–20% errors and cancellations</td><td class="good">100% automatic accuracy</td></tr>
+      <tr><td>Delivery address</td><td class="bad">Sent manually or forgotten</td><td class="good">Automatic precise GPS</td></tr>
+      <tr><td>Delivery tracking</td><td class="bad">Completely absent</td><td class="good">Live map for everyone</td></tr>
+      <tr><td>Staff time</td><td class="bad">At least 2 hours daily</td><td class="good">Zero — fully automatic</td></tr>
+      <tr><td>Average order value</td><td class="bad">Lower — customer doesn't see everything</td><td class="good">35% higher on average</td></tr>
+      <tr><td>Scalability</td><td class="bad">Capped by manual replies</td><td class="good">Dozens of orders simultaneously</td></tr>
+    </tbody>
+  </table>
+
+  <div class="nums">
+    <div class="num-card"><div class="num-val">+35%</div><div class="num-lbl">higher average order value when the full catalog is visible</div></div>
+    <div class="num-card"><div class="num-val">-90%</div><div class="num-lbl">drop in order errors and cancellations</div></div>
+    <div class="num-card"><div class="num-val">3×</div><div class="num-lbl">repeat purchase rate after the live tracking experience</div></div>
+    <div class="num-card"><div class="num-val">3 hrs</div><div class="num-lbl">your team reclaims every day from WhatsApp management</div></div>
+  </div>
+
+  <div class="pkg">
+    <p class="pkg-title">Everything you get when you join</p>
+    <div class="pkg-item"><span class="check">✓</span><span>Your complete digital store set up — we handle everything for you</span></div>
+    <div class="pkg-item"><span class="check">✓</span><span>Your full product catalog with photos and prices, ready to browse</span></div>
+    <div class="pkg-item"><span class="check">✓</span><span>Real-time order management dashboard</span></div>
+    <div class="pkg-item"><span class="check">✓</span><span>Rider app with live delivery map</span></div>
+    <div class="pkg-item"><span class="check">✓</span><span>Customer live tracking — builds trust, eliminates complaints</span></div>
+    <div class="pkg-item"><span class="check">✓</span><span>Full technical support — we are with you at every step</span></div>
+    <div class="pkg-item"><span class="check">✓</span><span>Daily and monthly sales reports to track your growth</span></div>
+  </div>
+
+  <div class="guar">
+    <span class="guar-badge">Written Guarantee</span>
+    <p class="guar-title">30 days free — zero risk, zero commitment</p>
+    <p class="guar-body">
+      We are so confident in the results that we give you a full 30 days completely free —
+      no credit card, no upfront commitment. Try the app with your real customers
+      and see the difference for yourself.
+    </p>
+    <div class="guar-points">
+      <div class="guar-pt"><span class="star">★</span><span>If your orders don't increase within 30 days — you pay nothing</span></div>
+      <div class="guar-pt"><span class="star">★</span><span>Cancel any time with one click — no fees, no questions</span></div>
+      <div class="guar-pt"><span class="star">★</span><span>Full setup is free — don't spend a single penny until you see results</span></div>
+    </div>
+  </div>
+
+  <div class="urgency">
+    <strong>⏳ Limited offer — for the first stores in your area only:</strong> We currently accept
+    a limited number of stores per area to guarantee the best service. The store that joins
+    first locks in its position in the local digital market before any competitor does.
+    Every day you wait is a day your neighbour could take that spot.
+  </div>
+
+  <div class="cta">
+    <p class="cta-title">One step separates you from a complete digital store</p>
+    <p>Contact us today on WhatsApp or by email — and within 24 hours your store will be live.
+    Send the link to your customers and receive your first complete, organised order.
+    You don't need to change how your customers behave — just give them one link on WhatsApp
+    and they will do the rest.</p>
+  </div>
+
+  <div class="sig">
+    <div class="sn2">Mohamed Bouallagui</div>
+    <div class="st2">Founder & Developer — Bakala Shop</div>
+    <div class="sc">mohamed.bouallagui001@gmail.com</div>
+  </div>
+
+</div>
+</body>
+</html>

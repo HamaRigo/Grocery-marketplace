@@ -25,8 +25,12 @@ export default function TrackPage() {
 
   useEffect(() => {
     if (!id) return
-    const proto  = window.location.protocol === 'https:' ? 'wss' : 'ws'
-    const ws = new WebSocket(`${proto}://${window.location.host}/tracking/ws/${id}`)
+    const envWs = (import.meta.env.VITE_WS_URL as string | undefined)?.replace(/\/$/, '')
+    const envApi = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '')
+    const base = envWs
+      ?? (envApi ? envApi.replace(/^http/, 'ws') : null)
+      ?? `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}`
+    const ws = new WebSocket(`${base}/tracking/ws/${id}`)
     wsRef.current = ws
 
     ws.onopen  = () => setConnected(true)

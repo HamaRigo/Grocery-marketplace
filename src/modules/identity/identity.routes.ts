@@ -8,10 +8,12 @@ const registerSchema = z.object({ email: S.email, password: S.password, phone: S
 const loginSchema    = z.object({ email: S.email, password: z.string().min(1) })
 const phoneSchema    = z.object({ phone: S.phone })
 
+// Cross-site (Vercel frontend → Railway API) needs SameSite=None + Secure.
+const crossSite = Boolean(process.env.FRONTEND_URL && !/localhost|127\.0\.0\.1/.test(process.env.FRONTEND_URL))
 const COOKIE_OPTS = {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
-  sameSite: 'lax' as const,
+  sameSite: (process.env.NODE_ENV === 'production' && crossSite ? 'none' : 'lax') as 'none' | 'lax',
   path: '/',
   maxAge: 30 * 24 * 3600,
 }
@@ -54,7 +56,7 @@ export const identityRoutes: FastifyPluginAsync = async (app) => {
   app.post('/logout', async (req, reply) => {
     const sid = (req.cookies as Record<string, string | undefined>).sid
     if (sid) await destroySession(sid)
-    reply.clearCookie('sid', { path: '/' })
+    reply.clearCookie('sid', COOKIE_OPTS)
     return { ok: true }
   })
 }

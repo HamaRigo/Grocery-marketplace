@@ -6,7 +6,7 @@ A multi-vendor grocery delivery platform. Local supermarkets subscribe and run t
 
 This repository is a full-stack marketplace system built around the same engineering primitives used in production AI/agentic products: retrieval indexes, event-driven orchestration, stateful workflows, background workers, role-aware APIs, and independently extractable services.
 
-> Note: this codebase does **not** currently call an LLM or generate answers from retrieved context. The RAG-relevant part is the retrieval/search pipeline and event-fed read model that could be used as the retrieval layer for product search, customer support, store operations assistants, or order-status copilots.
+> Note:  The RAG-relevant part is the retrieval/search pipeline and event-fed read model that could be used as the retrieval layer for product search, customer support, store operations assistants, or order-status copilots.
 
 | Recruiter request | Relevant project evidence |
 | --- | --- |

@@ -1,0 +1,15 @@
+.DS_Store
+.idea
+.git
+.claude
+frontend
+docs
+offer-acceptance.*
+*.md
+.github
+dist
+node_modules
+.env
+.env.*
+!.env.example
+!.env.prod.example

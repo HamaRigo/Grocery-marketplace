@@ -1,4 +1,4 @@
-import { get, post, put, del } from './client'
+import { apiUrl, get, post, put, del } from './client'
 
 export interface Category { id: string; name: string }
 export interface Product {
@@ -29,7 +29,7 @@ export const catalogApi = {
   deleteProduct:  (tenantId: string, id: string) =>
     del<void>(`/catalog/${tenantId}/products/${id}`),
   importCsv: (tenantId: string, csv: string) =>
-    fetch(`/catalog/${tenantId}/import`, {
+    fetch(apiUrl(`/catalog/${tenantId}/import`), {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
       credentials: 'include',

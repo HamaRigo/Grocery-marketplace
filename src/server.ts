@@ -37,10 +37,16 @@ declare module 'fastify' {
 export async function buildServer() {
   const app = Fastify({ logger: { level: process.env.NODE_ENV === 'production' ? 'warn' : 'info' } })
 
-  const allowedOrigin = process.env.FRONTEND_URL ?? 'http://localhost:5173'
+  const allowedOrigins = (process.env.FRONTEND_URL ?? 'http://localhost:5173')
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean)
 
   await app.register(cors, {
-    origin: allowedOrigin,
+    origin: (origin, cb) => {
+      if (!origin || allowedOrigins.includes(origin)) return cb(null, true)
+      return cb(new Error('Not allowed by CORS'), false)
+    },
     credentials: true,
   })
   await app.register(rateLimit, { max: 200, timeWindow: '1 minute' })

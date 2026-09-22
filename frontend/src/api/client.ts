@@ -1,6 +1,13 @@
-// All requests go to the same origin via Vite proxy — cookies flow automatically.
+// In local dev, Vite proxies same-origin paths to the API.
+// On Vercel, set VITE_API_URL to your API origin (no trailing slash).
+const API_BASE = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '')
+
+function url(path: string) {
+  return `${API_BASE}${path}`
+}
+
 async function req<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const res = await fetch(path, {
+  const res = await fetch(url(path), {
     ...init,
     credentials: 'include',
     headers: {
@@ -16,8 +23,9 @@ async function req<T>(path: string, init: RequestInit = {}): Promise<T> {
   return res.json() as T
 }
 
-export const get   = <T>(url: string)                 => req<T>(url)
-export const post  = <T>(url: string, body?: unknown) => req<T>(url, { method: 'POST',  body: JSON.stringify(body) })
-export const put   = <T>(url: string, body?: unknown) => req<T>(url, { method: 'PUT',   body: JSON.stringify(body) })
-export const patch = <T>(url: string, body?: unknown) => req<T>(url, { method: 'PATCH', body: JSON.stringify(body) })
-export const del   = <T>(url: string)                 => req<T>(url, { method: 'DELETE' })
+export const apiUrl = url
+export const get   = <T>(path: string)                 => req<T>(path)
+export const post  = <T>(path: string, body?: unknown) => req<T>(path, { method: 'POST',  body: JSON.stringify(body) })
+export const put   = <T>(path: string, body?: unknown) => req<T>(path, { method: 'PUT',   body: JSON.stringify(body) })
+export const patch = <T>(path: string, body?: unknown) => req<T>(path, { method: 'PATCH', body: JSON.stringify(body) })
+export const del   = <T>(path: string)                 => req<T>(path, { method: 'DELETE' })
