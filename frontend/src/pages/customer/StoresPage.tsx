@@ -220,6 +220,7 @@ function LocationMapPicker({
 export default function StoresPage() {
   const { user } = useAuth()
   const qc = useQueryClient()
+  const hasRequestedInitialLocation = useRef(false)
   const [lat, setLat] = useState('')
   const [lng, setLng] = useState('')
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
@@ -248,11 +249,20 @@ export default function StoresPage() {
   })
 
   const useMyLocation = useCallback(() => {
+    if (!navigator.geolocation) return
+
     navigator.geolocation.getCurrentPosition(pos => {
       setLat(String(pos.coords.latitude))
       setLng(String(pos.coords.longitude))
     })
   }, [])
+
+  useEffect(() => {
+    if (hasRequestedInitialLocation.current) return
+
+    hasRequestedInitialLocation.current = true
+    useMyLocation()
+  }, [useMyLocation])
 
   const selectedLocation = lat && lng
     ? { lat: Number(lat), lng: Number(lng) }
