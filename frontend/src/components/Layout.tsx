@@ -1,25 +1,29 @@
-import { useCallback, useRef, useState } from 'react'
-import { Link, Outlet, useNavigate } from 'react-router-dom'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import {
+  Bell, ClipboardList, LayoutDashboard, LogOut, Moon, Package,
+  ShoppingBag, Store, Sun, Tags, CreditCard, BarChart3, Bike,
+} from 'lucide-react'
 import { useAuth } from '../context/auth'
 import { notificationsApi } from '../api/notifications'
+import { useTheme } from '../hooks/useTheme'
+import Button from './ui/Button'
 
 const LANGS = [
   { code: 'en', label: 'EN' },
-  { code: 'ar', label: 'ع'  },
+  { code: 'ar', label: 'ع' },
 ]
-
 const RTL_LANGS = new Set(['ar'])
 
-function BellIcon() {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none"
-      stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-    </svg>
-  )
+function navClass({ isActive }: { isActive: boolean }) {
+  return [
+    'inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium transition-colors',
+    isActive
+      ? 'bg-brand-50 text-brand-700 dark:bg-brand-100 dark:text-brand-800'
+      : 'text-ink-muted hover:text-ink hover:bg-surface-muted',
+  ].join(' ')
 }
 
 export default function Layout() {
@@ -27,9 +31,9 @@ export default function Layout() {
   const navigate = useNavigate()
   const { t, i18n } = useTranslation()
   const qc = useQueryClient()
+  const { dark, toggle } = useTheme()
   const [bellOpen, setBellOpen] = useState(false)
   const bellRef = useRef<HTMLDivElement>(null)
-
   const isRtl = RTL_LANGS.has(i18n.language)
 
   const handleLogout = useCallback(async () => {
@@ -56,65 +60,70 @@ export default function Layout() {
 
   const unreadCount = notifications.filter(n => !n.read).length
 
+  useEffect(() => {
+    if (!bellOpen) return
+    const onDoc = (e: MouseEvent) => {
+      if (bellRef.current && !bellRef.current.contains(e.target as Node)) setBellOpen(false)
+    }
+    document.addEventListener('mousedown', onDoc)
+    return () => document.removeEventListener('mousedown', onDoc)
+  }, [bellOpen])
+
   function openBell() {
     setBellOpen(v => !v)
     if (unreadCount > 0) markRead()
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b shadow-sm">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link to="/" className="text-xl font-bold text-green-600">
-            {isRtl ? 'بقالة' : 'Bakala'}
+    <div className="min-h-screen bg-surface">
+      <header className="sticky top-0 z-40 border-b border-line bg-surface-raised/90 backdrop-blur-md">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
+          <Link to="/" className="group flex items-center gap-2.5 shrink-0">
+            <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-brand-600 text-white shadow-pop transition-transform group-hover:scale-105">
+              <ShoppingBag className="h-4 w-4" aria-hidden />
+            </span>
+            <span className="font-display text-lg font-extrabold tracking-tight text-brand-700 dark:text-brand-500">
+              {isRtl ? 'بقالة' : 'Bakala'}
+            </span>
           </Link>
 
-          <nav className="flex items-center gap-5 text-sm font-medium">
+          <nav className="hidden md:flex items-center gap-1 overflow-x-auto">
             {role === 'customer' && (
               <>
-                <Link to="/stores" className="text-gray-700 hover:text-green-600">{t('nav.stores')}</Link>
-                <Link to="/orders" className="text-gray-700 hover:text-green-600">{t('nav.myOrders')}</Link>
+                <NavLink to="/" end className={navClass}><Store className="h-4 w-4" />{t('nav.home', 'Home')}</NavLink>
+                <NavLink to="/stores" className={navClass}><MapIcon />{t('nav.stores')}</NavLink>
+                <NavLink to="/orders" className={navClass}><Package className="h-4 w-4" />{t('nav.myOrders')}</NavLink>
               </>
             )}
             {role === 'manager' && (
               <>
-                <Link to="/manager" className="text-gray-700 hover:text-green-600">{t('nav.orderQueue')}</Link>
-                {tenantId && (
-                  <Link to={`/manager/catalog/${tenantId}`} className="text-gray-700 hover:text-green-600">
-                    {t('nav.catalog')}
-                  </Link>
-                )}
-                {tenantId && (
-                  <Link to={`/manager/slots/${tenantId}`} className="text-gray-700 hover:text-green-600">
-                    {t('nav.slots', 'Slots')}
-                  </Link>
-                )}
-                <Link to="/manager/subscription" className="text-gray-700 hover:text-green-600">
-                  {t('nav.subscription')}
-                </Link>
+                <NavLink to="/manager" end className={navClass}><ClipboardList className="h-4 w-4" />{t('nav.orderQueue')}</NavLink>
+                {tenantId && <NavLink to={`/manager/catalog/${tenantId}`} className={navClass}><Tags className="h-4 w-4" />{t('nav.catalog')}</NavLink>}
+                {tenantId && <NavLink to={`/manager/slots/${tenantId}`} className={navClass}><LayoutDashboard className="h-4 w-4" />{t('nav.slots', 'Slots')}</NavLink>}
+                <NavLink to="/manager/subscription" className={navClass}><CreditCard className="h-4 w-4" />{t('nav.subscription')}</NavLink>
               </>
             )}
             {role === 'admin' && (
               <>
-                <Link to="/admin" className="text-gray-700 hover:text-green-600">{t('nav.storesAdmin')}</Link>
-                <Link to="/admin/orders" className="text-gray-700 hover:text-green-600">{t('nav.orders', 'Orders')}</Link>
-                <Link to="/admin/reports" className="text-gray-700 hover:text-green-600">{t('nav.reports')}</Link>
+                <NavLink to="/admin" end className={navClass}><Store className="h-4 w-4" />{t('nav.storesAdmin')}</NavLink>
+                <NavLink to="/admin/orders" className={navClass}><Package className="h-4 w-4" />{t('nav.orders', 'Orders')}</NavLink>
+                <NavLink to="/admin/reports" className={navClass}><BarChart3 className="h-4 w-4" />{t('nav.reports')}</NavLink>
               </>
             )}
             {role === 'rider' && (
-              <Link to="/rider" className="text-gray-700 hover:text-green-600">{t('nav.myDeliveries')}</Link>
+              <NavLink to="/rider" className={navClass}><Bike className="h-4 w-4" />{t('nav.myDeliveries')}</NavLink>
             )}
+          </nav>
 
-            {/* Language switcher */}
-            <div className="flex items-center gap-1 border rounded px-2 py-1 text-xs text-gray-500">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <div className="flex items-center rounded-xl border border-line p-0.5 text-xs text-ink-faint">
               {LANGS.map(l => (
                 <button
                   key={l.code}
+                  type="button"
                   onClick={() => changeLang(l.code)}
-                  className={`px-1 transition-colors ${
-                    i18n.language === l.code
-                      ? 'font-bold text-green-600'
-                      : 'hover:text-gray-800'
+                  className={`rounded-lg px-2 py-1 transition-colors ${
+                    i18n.language === l.code ? 'bg-brand-600 text-white font-semibold' : 'hover:text-ink'
                   }`}
                 >
                   {l.label}
@@ -122,40 +131,35 @@ export default function Layout() {
               ))}
             </div>
 
-            {/* Notification bell */}
+            <Button variant="ghost" size="icon" onClick={toggle} aria-label={dark ? 'Light mode' : 'Dark mode'}>
+              {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </Button>
+
             <div className="relative" ref={bellRef}>
-              <button
-                onClick={openBell}
-                className="relative text-gray-600 hover:text-green-600"
-                aria-label={t('notifications.title')}
-              >
-                <BellIcon />
+              <Button variant="ghost" size="icon" onClick={openBell} aria-label={t('notifications.title')}>
+                <Bell className="h-4 w-4" />
                 {unreadCount > 0 && (
-                  <span className={`absolute -top-1 bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center leading-none ${
-                    isRtl ? '-left-1' : '-right-1'
-                  }`}>
+                  <span className={`absolute top-1 ${isRtl ? 'left-1' : 'right-1'} flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold text-white`}>
                     {unreadCount > 9 ? '9+' : unreadCount}
                   </span>
                 )}
-              </button>
+              </Button>
 
               {bellOpen && (
-                <div className={`absolute mt-2 w-80 bg-white border rounded-xl shadow-xl z-50 overflow-hidden ${
-                  isRtl ? 'left-0' : 'right-0'
-                }`}>
-                  <div className="flex items-center justify-between px-4 py-3 border-b">
-                    <span className="font-semibold text-sm text-gray-800">{t('notifications.title')}</span>
-                    <button onClick={() => setBellOpen(false)} className="text-gray-400 hover:text-gray-600 text-xs">
+                <div className={`absolute mt-2 w-80 overflow-hidden rounded-card border border-line bg-surface-raised shadow-lift z-50 ${isRtl ? 'left-0' : 'right-0'}`}>
+                  <div className="flex items-center justify-between border-b border-line px-4 py-3">
+                    <span className="text-sm font-semibold text-ink">{t('notifications.title')}</span>
+                    <button type="button" onClick={() => setBellOpen(false)} className="text-xs text-ink-faint hover:text-ink">
                       {t('common.close')}
                     </button>
                   </div>
-                  <ul className="max-h-72 overflow-y-auto divide-y">
+                  <ul className="max-h-72 overflow-y-auto divide-y divide-line">
                     {notifications.length === 0 ? (
-                      <li className="px-4 py-5 text-sm text-gray-400 text-center">{t('notifications.empty')}</li>
+                      <li className="px-4 py-8 text-center text-sm text-ink-faint">{t('notifications.empty')}</li>
                     ) : notifications.map(n => (
-                      <li key={n.id} className={`px-4 py-3 text-sm ${n.read ? 'text-gray-500' : 'text-gray-800 font-medium bg-green-50'}`}>
+                      <li key={n.id} className={`px-4 py-3 text-sm ${n.read ? 'text-ink-muted' : 'bg-brand-50/60 text-ink font-medium dark:bg-brand-100/30'}`}>
                         <p>{n.message}</p>
-                        <p className="text-xs text-gray-400 mt-0.5">{new Date(n.createdAt).toLocaleString()}</p>
+                        <p className="mt-0.5 text-xs text-ink-faint">{new Date(n.createdAt).toLocaleString()}</p>
                       </li>
                     ))}
                   </ul>
@@ -163,16 +167,57 @@ export default function Layout() {
               )}
             </div>
 
-            <button onClick={handleLogout} className="text-red-500 hover:text-red-700">
+            <Button variant="ghost" size="sm" onClick={handleLogout} leftIcon={<LogOut className="h-3.5 w-3.5" />} className="text-danger hover:text-danger hidden sm:inline-flex">
               {t('nav.logout')}
-            </button>
-          </nav>
+            </Button>
+            <Button variant="ghost" size="icon" onClick={handleLogout} aria-label={t('nav.logout')} className="text-danger sm:hidden">
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Mobile bottom-ish secondary nav strip */}
+        <div className="md:hidden border-t border-line overflow-x-auto">
+          <div className="flex gap-1 px-3 py-2">
+            {role === 'customer' && (
+              <>
+                <NavLink to="/" end className={navClass}><Store className="h-4 w-4" />Home</NavLink>
+                <NavLink to="/stores" className={navClass}><MapIcon />Map</NavLink>
+                <NavLink to="/orders" className={navClass}><Package className="h-4 w-4" />Orders</NavLink>
+              </>
+            )}
+            {role === 'manager' && (
+              <>
+                <NavLink to="/manager" end className={navClass}>Queue</NavLink>
+                {tenantId && <NavLink to={`/manager/catalog/${tenantId}`} className={navClass}>Catalog</NavLink>}
+                <NavLink to="/manager/subscription" className={navClass}>Plan</NavLink>
+              </>
+            )}
+            {role === 'admin' && (
+              <>
+                <NavLink to="/admin" end className={navClass}>Stores</NavLink>
+                <NavLink to="/admin/orders" className={navClass}>Orders</NavLink>
+                <NavLink to="/admin/reports" className={navClass}>Reports</NavLink>
+              </>
+            )}
+            {role === 'rider' && <NavLink to="/rider" className={navClass}>Jobs</NavLink>}
+          </div>
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-6 py-8">
+      <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8 page-enter">
         <Outlet />
       </main>
     </div>
+  )
+}
+
+function MapIcon() {
+  return (
+    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21" />
+      <line x1="9" x2="9" y1="3" y2="18" />
+      <line x1="15" x2="15" y1="6" y2="21" />
+    </svg>
   )
 }

@@ -54,8 +54,8 @@ export default function RiderPage() {
     return (
       <div className="max-w-md mx-auto text-center py-20 px-6">
         <p className="text-4xl mb-4">🛵</p>
-        <h2 className="text-lg font-semibold text-gray-800 mb-2">No rider account found</h2>
-        <p className="text-sm text-gray-500">Ask your store manager to register you as a rider.</p>
+        <h2 className="text-lg font-semibold text-ink mb-2">No rider account found</h2>
+        <p className="text-sm text-ink-muted">Ask your store manager to register you as a rider.</p>
       </div>
     )
   }
@@ -67,25 +67,25 @@ export default function RiderPage() {
     <div className="max-w-md mx-auto space-y-5">
 
       {/* Status card */}
-      <div className="bg-white rounded-2xl border shadow-sm p-5">
+      <div className="bg-surface-raised rounded-2xl border shadow-sm p-5">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <p className="text-xs text-gray-400 uppercase tracking-wide">Vehicle</p>
-            <p className="font-semibold text-gray-800">{rider.vehicle ?? 'Not specified'}</p>
+            <p className="text-xs text-ink-faint uppercase tracking-wide">Vehicle</p>
+            <p className="font-semibold text-ink">{rider.vehicle ?? 'Not specified'}</p>
           </div>
           <div className="flex items-center gap-2">
             <div className={`w-2.5 h-2.5 rounded-full ${STATUS_COLOR[rider.status]}`} />
-            <span className="text-sm font-medium capitalize text-gray-700">{rider.status}</span>
+            <span className="text-sm font-medium capitalize text-ink-muted">{rider.status}</span>
           </div>
         </div>
 
         <button
           onClick={() => toggleStatus()}
           disabled={togglingStatus || rider.status === 'busy'}
-          className={`w-full py-3 rounded-xl text-white font-semibold text-base transition disabled:opacity-50 ${
+          className={`w-full py-3 rounded-card text-white font-semibold text-base transition disabled:opacity-50 ${
             rider.status === 'online'
               ? 'bg-red-500 hover:bg-red-600'
-              : 'bg-green-600 hover:bg-green-700'
+              : 'bg-brand-600 hover:bg-brand-700'
           }`}
         >
           {togglingStatus
@@ -99,20 +99,20 @@ export default function RiderPage() {
       </div>
 
       {/* Earnings dashboard */}
-      <div className="bg-white rounded-2xl border shadow-sm p-5">
-        <h2 className="font-semibold text-gray-700 mb-3 text-sm uppercase tracking-wide">
+      <div className="bg-surface-raised rounded-2xl border shadow-sm p-5">
+        <h2 className="font-semibold text-ink-muted mb-3 text-sm uppercase tracking-wide">
           Earnings — last {earnings?.days ?? 7} days
         </h2>
         <div className="grid grid-cols-2 gap-4">
-          <div className="bg-green-50 rounded-xl p-4 text-center">
-            <p className="text-3xl font-bold text-green-700">{earnings?.deliveries ?? '—'}</p>
-            <p className="text-xs text-gray-500 mt-1">Deliveries</p>
+          <div className="bg-green-50 rounded-card p-4 text-center">
+            <p className="text-3xl font-bold text-brand-700 dark:text-brand-500">{earnings?.deliveries ?? '—'}</p>
+            <p className="text-xs text-ink-muted mt-1">Deliveries</p>
           </div>
-          <div className="bg-green-50 rounded-xl p-4 text-center">
-            <p className="text-3xl font-bold text-green-700">
+          <div className="bg-green-50 rounded-card p-4 text-center">
+            <p className="text-3xl font-bold text-brand-700 dark:text-brand-500">
               {earnings?.totalMinor != null ? formatMinor(earnings.totalMinor) : '—'}
             </p>
-            <p className="text-xs text-gray-500 mt-1">Est. earnings</p>
+            <p className="text-xs text-ink-muted mt-1">Est. earnings</p>
           </div>
         </div>
       </div>
@@ -124,12 +124,12 @@ export default function RiderPage() {
             <h2 className="font-bold text-green-800 text-base">Active Delivery</h2>
             <Badge status={activeJob.status} />
           </div>
-          <p className="text-xs text-gray-500 mb-4 font-mono">
+          <p className="text-xs text-ink-muted mb-4 font-mono">
             Job {activeJob.id.slice(0, 8)}… · Order {activeJob.orderId.slice(0, 8)}…
           </p>
           <Link
             to={`/rider/job/${activeJob.id}`}
-            className="block text-center bg-green-600 text-white rounded-xl py-3 font-semibold hover:bg-green-700 transition"
+            className="block text-center bg-brand-600 text-white rounded-card py-3 font-semibold hover:bg-brand-700 transition"
           >
             {activeJob.status === 'assigned' ? 'Go to Pickup →' : 'Continue Delivery →'}
           </Link>
@@ -137,26 +137,26 @@ export default function RiderPage() {
       )}
 
       {!activeJob && rider.status === 'online' && (
-        <div className="bg-white border border-dashed border-gray-300 rounded-2xl p-8 text-center">
+        <div className="bg-surface-raised border border-dashed border-line rounded-2xl p-8 text-center">
           <p className="text-3xl mb-2">🟢</p>
-          <p className="text-gray-600 font-medium">You're online</p>
-          <p className="text-sm text-gray-400 mt-1">Waiting for the next delivery…</p>
+          <p className="text-ink-muted font-medium">You're online</p>
+          <p className="text-sm text-ink-faint mt-1">Waiting for the next delivery…</p>
         </div>
       )}
 
       {/* Recent deliveries */}
       {recentJobs.length > 0 && (
         <div>
-          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2 px-1">
+          <h3 className="text-sm font-semibold text-ink-muted uppercase tracking-wide mb-2 px-1">
             Recent
           </h3>
           <div className="space-y-2">
             {recentJobs.map(job => (
-              <div key={job.id} className="bg-white border rounded-xl p-4 flex items-center justify-between">
+              <div key={job.id} className="bg-surface-raised border rounded-card p-4 flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-gray-400 font-mono">{job.id.slice(0, 8)}…</p>
+                  <p className="text-xs text-ink-faint font-mono">{job.id.slice(0, 8)}…</p>
                   {job.deliveredAt && (
-                    <p className="text-xs text-gray-500 mt-0.5">
+                    <p className="text-xs text-ink-muted mt-0.5">
                       {new Date(job.deliveredAt).toLocaleString()}
                     </p>
                   )}
@@ -168,7 +168,7 @@ export default function RiderPage() {
         </div>
       )}
 
-      {jobsLoading && <p className="text-center text-sm text-gray-400">Loading jobs…</p>}
+      {jobsLoading && <p className="text-center text-sm text-ink-faint">Loading jobs…</p>}
     </div>
   )
 }

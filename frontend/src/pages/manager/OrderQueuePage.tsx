@@ -45,38 +45,38 @@ function OrderCard({ order, actions, onAction, onHandoff }: {
   const v = order.curbsideVehicle
 
   return (
-    <div className={`bg-white rounded-lg p-3 shadow-sm border ${
-      isCurbside && order.checkedIn ? 'border-orange-300' : ''
+    <div className={`bg-surface-raised rounded-2xl p-3 shadow-soft border ${
+      isCurbside && order.checkedIn ? 'border-orange-300' : 'border-line'
     }`}>
       <div className="flex items-start justify-between mb-1">
-        <p className="text-xs text-gray-400">{order.id.slice(0, 8)}…</p>
+        <p className="text-xs text-ink-faint">{order.id.slice(0, 8)}…</p>
         {isCurbside && <CurbsideBadge checkedIn={order.checkedIn} />}
       </div>
 
       {isCurbside ? (
         <div className="mb-2">
-          <p className="text-sm font-medium text-gray-800">{order.curbsideName}</p>
+          <p className="text-sm font-medium text-ink">{order.curbsideName}</p>
           {v && (
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-ink-muted">
               {v.color} {v.make} {v.model}{v.plate ? ` · ${v.plate}` : ''}
             </p>
           )}
-          <p className="text-xs text-gray-400 mt-0.5 capitalize">
+          <p className="text-xs text-ink-faint mt-0.5 capitalize">
             Pay: {order.paymentMethod}{order.payment ? ` (${order.payment.status})` : ''}
           </p>
         </div>
       ) : (
         <>
-          <p className="text-sm font-medium text-gray-800 mb-1 truncate">
+          <p className="text-sm font-medium text-ink mb-1 truncate">
             {(order as any).addressGeo?.address ?? 'Delivery'}
           </p>
           {order.payment && (
-            <p className="text-xs text-gray-400 mb-1 capitalize">Payment: {order.payment.status}</p>
+            <p className="text-xs text-ink-faint mb-1 capitalize">Payment: {order.payment.status}</p>
           )}
         </>
       )}
 
-      <p className="text-sm font-semibold text-green-700 mb-2">
+      <p className="text-sm font-semibold text-brand-700 dark:text-brand-500 mb-2">
         {formatMinor(order.totalMinor)}
       </p>
 
@@ -139,19 +139,19 @@ export default function OrderQueuePage() {
   }
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Order Queue</h1>
+    <div className="page-enter">
+      <h1 className="text-2xl font-extrabold tracking-tight text-ink mb-6">Order Queue</h1>
 
-      {isLoading && <p className="text-gray-500">Loading…</p>}
+      {isLoading && <p className="text-ink-muted">Loading…</p>}
 
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         {COLUMNS.map(col => {
           const colOrders = orders?.filter((o: Order) => o.status === col.status) ?? []
           return (
-            <div key={col.status} className="bg-gray-100 rounded-xl p-3">
+            <div key={col.status} className="bg-surface-muted rounded-card p-3 border border-line">
               <div className="flex items-center justify-between mb-3">
-                <h2 className="font-semibold text-gray-700 text-sm">{col.label}</h2>
-                <span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">
+                <h2 className="font-semibold text-ink text-sm">{col.label}</h2>
+                <span className="text-xs bg-surface-raised text-ink-muted border border-line px-2 py-0.5 rounded-full">
                   {colOrders.length}
                 </span>
               </div>
@@ -167,7 +167,7 @@ export default function OrderQueuePage() {
                   />
                 ))}
                 {colOrders.length === 0 && (
-                  <p className="text-xs text-gray-400 text-center py-4">Empty</p>
+                  <p className="text-xs text-ink-faint text-center py-4">Empty</p>
                 )}
               </div>
             </div>
@@ -176,22 +176,22 @@ export default function OrderQueuePage() {
       </div>
 
       <div className="mt-6">
-        <h2 className="text-lg font-semibold text-gray-800 mb-3">In Transit / Delivered</h2>
+        <h2 className="text-lg font-semibold text-ink mb-3">In Transit / Delivered</h2>
         <div className="space-y-2">
           {orders
             ?.filter((o: Order) => ['assigned', 'out_for_delivery', 'delivered'].includes(o.status))
             .map((order: Order) => (
-              <div key={order.id} className="bg-white rounded-xl border p-4 flex items-center justify-between">
+              <div key={order.id} className="bg-surface-raised rounded-card border border-line p-4 flex items-center justify-between shadow-soft">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-400">{order.id.slice(0, 8)}…</span>
+                  <span className="text-xs text-ink-faint">{order.id.slice(0, 8)}…</span>
                   {order.fulfillmentType === 'curbside' ? (
-                    <span className="text-sm text-gray-700">{order.curbsideName} · 🚗</span>
+                    <span className="text-sm text-ink">{order.curbsideName} · 🚗</span>
                   ) : (
-                    <span className="text-sm text-gray-700">{(order as any).addressGeo?.address}</span>
+                    <span className="text-sm text-ink">{(order as any).addressGeo?.address}</span>
                   )}
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-sm font-semibold text-green-700">
+                  <span className="text-sm font-semibold text-brand-700 dark:text-brand-500">
                     {formatMinor(order.totalMinor)}
                   </span>
                   <Badge status={order.status} />

@@ -87,8 +87,8 @@ export default function ActiveJobPage() {
   if (!job) {
     return (
       <div className="max-w-md mx-auto text-center py-20">
-        <p className="text-gray-400">Loading job…</p>
-        <Link to="/rider" className="text-green-600 text-sm mt-4 block">← Back</Link>
+        <p className="text-ink-faint">Loading job…</p>
+        <Link to="/rider" className="text-brand-600 text-sm mt-4 block">← Back</Link>
       </div>
     )
   }
@@ -100,32 +100,32 @@ export default function ActiveJobPage() {
   return (
     <div className="max-w-md mx-auto space-y-4">
       <div className="flex items-center justify-between">
-        <Link to="/rider" className="text-sm text-gray-500 hover:text-gray-700">← Back</Link>
+        <Link to="/rider" className="text-sm text-ink-muted hover:text-ink-muted">← Back</Link>
         <Badge status={job.status} />
       </div>
 
       {/* Progress steps */}
-      <div className="bg-white border rounded-2xl p-5">
+      <div className="bg-surface-raised border rounded-2xl p-5">
         <div className="flex items-center gap-3 mb-1">
           <StepDot done={!isAssigned} active={isAssigned} />
           <div>
-            <p className="font-semibold text-gray-800">
+            <p className="font-semibold text-ink">
               {isAssigned ? 'Go to store' : 'Picked up ✓'}
             </p>
-            <p className="text-xs text-gray-400 font-mono">
+            <p className="text-xs text-ink-faint font-mono">
               Tenant {job.tenantId.slice(0, 8)}…
             </p>
           </div>
         </div>
-        <div className="ml-4 border-l-2 border-dashed border-gray-200 h-5" />
+        <div className="ml-4 border-l-2 border-dashed border-line h-5" />
         <div className="flex items-center gap-3">
           <StepDot done={isDelivered} active={isPickedUp} />
           <div>
-            <p className={`font-semibold ${isPickedUp || isDelivered ? 'text-gray-800' : 'text-gray-400'}`}>
+            <p className={`font-semibold ${isPickedUp || isDelivered ? 'text-ink' : 'text-ink-faint'}`}>
               {isDelivered ? 'Delivered ✓' : 'Deliver to customer'}
             </p>
             {order && (
-              <p className="text-xs text-gray-500">{order.addressGeo?.address}</p>
+              <p className="text-xs text-ink-muted">{order.addressGeo?.address}</p>
             )}
           </div>
         </div>
@@ -133,10 +133,10 @@ export default function ActiveJobPage() {
 
       {/* Order details */}
       {order && (
-        <div className="bg-white border rounded-2xl p-4">
-          <p className="text-xs text-gray-400 mb-1">Order #{order.id.slice(0, 8)}…</p>
-          <p className="font-semibold text-green-700 text-lg">{formatMinor(order.totalMinor)}</p>
-          <p className="text-sm text-gray-600 mt-1">{order.addressGeo?.address}</p>
+        <div className="bg-surface-raised border rounded-2xl p-4">
+          <p className="text-xs text-ink-faint mb-1">Order #{order.id.slice(0, 8)}…</p>
+          <p className="font-semibold text-brand-700 dark:text-brand-500 text-lg">{formatMinor(order.totalMinor)}</p>
+          <p className="text-sm text-ink-muted mt-1">{order.addressGeo?.address}</p>
         </div>
       )}
 
@@ -145,20 +145,20 @@ export default function ActiveJobPage() {
         <div className={`rounded-2xl p-4 flex items-center gap-3 ${
           gpsStatus === 'active'  ? 'bg-green-50 border border-green-200' :
           gpsStatus === 'denied'  ? 'bg-red-50 border border-red-200' :
-                                    'bg-gray-50 border'
+                                    'bg-surface-muted border'
         }`}>
           <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
             gpsStatus === 'active' ? 'bg-green-500 animate-pulse' :
             gpsStatus === 'denied' ? 'bg-red-500' : 'bg-gray-300'
           }`} />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-700">
+            <p className="text-sm font-medium text-ink-muted">
               {gpsStatus === 'active'  ? 'GPS tracking active' :
                gpsStatus === 'denied'  ? 'GPS access denied' :
                                          'Acquiring GPS…'}
             </p>
             {lastPing && (
-              <p className="text-xs text-gray-400 font-mono truncate">
+              <p className="text-xs text-ink-faint font-mono truncate">
                 {lastPing.lat.toFixed(5)}, {lastPing.lng.toFixed(5)}
               </p>
             )}
@@ -169,7 +169,7 @@ export default function ActiveJobPage() {
       {/* Maps link */}
       {mapsUrl && !isDelivered && (
         <a href={mapsUrl} target="_blank" rel="noopener noreferrer"
-          className="block text-center bg-blue-600 text-white rounded-xl py-3 font-semibold hover:bg-blue-700">
+          className="block text-center bg-blue-600 text-white rounded-card py-3 font-semibold hover:bg-blue-700">
           Open in Google Maps
         </a>
       )}
@@ -179,7 +179,7 @@ export default function ActiveJobPage() {
         <button
           onClick={() => confirmPickup()}
           disabled={pickingUp}
-          className="w-full bg-yellow-500 text-white rounded-xl py-4 font-bold text-lg hover:bg-yellow-600 disabled:opacity-50 shadow-lg"
+          className="w-full bg-yellow-500 text-white rounded-card py-4 font-bold text-lg hover:bg-yellow-600 disabled:opacity-50 shadow-lg"
         >
           {pickingUp ? 'Confirming…' : '📦  Confirm Pickup'}
         </button>
@@ -189,7 +189,7 @@ export default function ActiveJobPage() {
         <button
           onClick={() => confirmDelivery()}
           disabled={delivering}
-          className="w-full bg-green-600 text-white rounded-xl py-4 font-bold text-lg hover:bg-green-700 disabled:opacity-50 shadow-lg"
+          className="w-full bg-brand-600 text-white rounded-card py-4 font-bold text-lg hover:bg-brand-700 disabled:opacity-50 shadow-lg"
         >
           {delivering ? 'Confirming…' : '✅  Confirm Delivery'}
         </button>
@@ -198,8 +198,8 @@ export default function ActiveJobPage() {
       {isDelivered && (
         <div className="text-center py-6">
           <p className="text-4xl mb-2">🎉</p>
-          <p className="font-bold text-green-700 text-lg">Delivery complete!</p>
-          <Link to="/rider" className="block mt-4 text-green-600 hover:underline">
+          <p className="font-bold text-brand-700 dark:text-brand-500 text-lg">Delivery complete!</p>
+          <Link to="/rider" className="block mt-4 text-brand-600 hover:underline">
             Back to dashboard
           </Link>
         </div>

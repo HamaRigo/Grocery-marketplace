@@ -4,11 +4,14 @@ import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
+import { CreditCard, Lock, ShieldCheck } from 'lucide-react'
 import { ordersApi } from '../../api/orders'
 import { paymentsApi } from '../../api/payments'
 import { formatMinor } from '../../lib/money'
+import Button from '../../components/ui/Button'
+import Card from '../../components/ui/Card'
+import { PageSpinner } from '../../components/ui/Skeleton'
 
-// Load once at module scope, not per render, per Stripe.js guidance.
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)
 
 function PaymentForm() {
@@ -36,8 +39,6 @@ function PaymentForm() {
       return
     }
 
-    // The card was accepted, but the order only moves out of pending_payment
-    // once the Stripe webhook confirms it — never trust this callback alone.
     navigate('/orders')
   }
 
@@ -45,15 +46,11 @@ function PaymentForm() {
     <form onSubmit={handleSubmit} className="space-y-4">
       <PaymentElement />
       {error && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">{error}</div>
+        <div className="rounded-2xl border border-danger/30 bg-red-50 dark:bg-red-950/30 p-3 text-sm text-danger">{error}</div>
       )}
-      <button
-        type="submit"
-        disabled={!stripe || submitting}
-        className="w-full py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 disabled:opacity-50"
-      >
+      <Button type="submit" className="w-full" size="lg" disabled={!stripe} loading={submitting} leftIcon={<Lock className="h-4 w-4" />}>
         {submitting ? t('checkout.processing') : t('checkout.payNow')}
-      </button>
+      </Button>
     </form>
   )
 }
@@ -79,35 +76,44 @@ export default function CheckoutPage() {
 
   if (order && order.status !== 'pending_payment') {
     return (
-      <div className="max-w-lg mx-auto text-center py-12">
-        <p className="text-gray-500 mb-4">{t('checkout.notAwaitingPayment')}</p>
-        <Link to="/orders" className="text-green-600 hover:underline">{t('checkout.backToOrders')}</Link>
+      <div className="mx-auto max-w-lg text-center py-16">
+        <p className="text-ink-muted mb-4">{t('checkout.notAwaitingPayment')}</p>
+        <Link to="/orders" className="text-brand-700 font-medium hover:underline">{t('checkout.backToOrders')}</Link>
       </div>
     )
   }
 
   return (
-    <div className="max-w-lg mx-auto">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">{t('checkout.title')}</h1>
+    <div className="mx-auto max-w-lg space-y-5">
+      <div>
+        <h1 className="text-2xl font-extrabold tracking-tight text-ink flex items-center gap-2">
+          <CreditCard className="h-6 w-6 text-brand-600" /> {t('checkout.title')}
+        </h1>
+        <p className="text-sm text-ink-muted mt-1 flex items-center gap-1.5">
+          <ShieldCheck className="h-4 w-4 text-brand-600" /> Secure payment powered by Stripe
+        </p>
+      </div>
 
       {order && (
-        <div className="bg-white rounded-xl border p-5 mb-6 flex justify-between items-center">
-          <span className="text-sm text-gray-500">{t('checkout.orderTotal')}</span>
-          <span className="font-semibold text-green-700">{formatMinor(order.totalMinor)}</span>
-        </div>
+        <Card className="flex justify-between items-center">
+          <span className="text-sm text-ink-muted">{t('checkout.orderTotal')}</span>
+          <span className="text-lg font-bold text-brand-700 dark:text-brand-500">{formatMinor(order.totalMinor)}</span>
+        </Card>
       )}
 
       {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">{error}</div>
+        <div className="rounded-2xl border border-danger/30 bg-red-50 dark:bg-red-950/30 p-3 text-sm text-danger">{error}</div>
       )}
 
-      {clientSecret ? (
-        <Elements stripe={stripePromise} options={{ clientSecret }}>
-          <PaymentForm />
-        </Elements>
-      ) : (
-        !error && <p className="text-gray-500">{t('checkout.loadingForm')}</p>
-      )}
+      <Card>
+        {clientSecret ? (
+          <Elements stripe={stripePromise} options={{ clientSecret }}>
+            <PaymentForm />
+          </Elements>
+        ) : (
+          !error && <PageSpinner label={t('checkout.loadingForm')} />
+        )}
+      </Card>
     </div>
   )
 }

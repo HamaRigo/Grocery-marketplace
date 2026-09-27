@@ -102,15 +102,15 @@ export default function CurbsidePage() {
     return (
       <div className="max-w-lg mx-auto py-12 text-center">
         <div className="text-5xl mb-4">🛒</div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Order placed!</h1>
-        <p className="text-gray-500 mb-1">Order ID: <span className="font-mono text-sm">{orderId?.slice(0, 8)}…</span></p>
-        <p className="text-gray-500 mb-8">We're preparing your order. When you arrive, tap the button below.</p>
+        <h1 className="text-2xl font-bold text-ink mb-2">Order placed!</h1>
+        <p className="text-ink-muted mb-1">Order ID: <span className="font-mono text-sm">{orderId?.slice(0, 8)}…</span></p>
+        <p className="text-ink-muted mb-8">We're preparing your order. When you arrive, tap the button below.</p>
 
         {checkedIn ? (
-          <div className="bg-green-50 border border-green-200 rounded-xl p-5">
-            <p className="text-green-700 font-semibold text-lg">You're checked in!</p>
-            <p className="text-green-600 text-sm mt-1">An employee is bringing your order to your car.</p>
-            <p className="text-xs text-gray-500 mt-3">
+          <div className="bg-green-50 border border-green-200 rounded-card p-5">
+            <p className="text-brand-700 font-semibold text-lg">You're checked in!</p>
+            <p className="text-brand-600 text-sm mt-1">An employee is bringing your order to your car.</p>
+            <p className="text-xs text-ink-muted mt-3">
               Payment: <span className="font-medium capitalize">{paymentMethod}</span> · Total: <span className="font-medium">{formatMinor(total)}</span>
             </p>
           </div>
@@ -118,7 +118,7 @@ export default function CurbsidePage() {
           <button
             onClick={doCheckIn}
             disabled={checkingIn}
-            className="w-full py-4 bg-green-600 text-white rounded-xl text-lg font-semibold hover:bg-green-700 disabled:opacity-50"
+            className="w-full py-4 bg-brand-600 text-white rounded-card text-lg font-semibold hover:bg-brand-700 disabled:opacity-50"
           >
             {checkingIn ? 'Notifying…' : "I'm outside the store"}
           </button>
@@ -132,57 +132,57 @@ export default function CurbsidePage() {
   if (step === 'checkout') {
     return (
       <div className="max-w-lg mx-auto">
-        <button onClick={() => setStep('browse')} className="text-sm text-green-600 mb-4 hover:underline">
+        <button onClick={() => setStep('browse')} className="text-sm text-brand-600 mb-4 hover:underline">
           ← Back to products
         </button>
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Checkout</h1>
+        <h1 className="text-2xl font-bold text-ink mb-6">Checkout</h1>
 
         {/* Cart summary */}
-        <div className="bg-gray-50 rounded-xl border p-4 mb-6">
-          <h2 className="text-sm font-semibold text-gray-700 mb-3">Your items</h2>
+        <div className="bg-surface-muted rounded-card border p-4 mb-6">
+          <h2 className="text-sm font-semibold text-ink-muted mb-3">Your items</h2>
           {cart.map(l => (
             <div key={l.productId} className="flex justify-between items-center text-sm py-1">
-              <span className="text-gray-700">{l.name} × {l.qty}</span>
+              <span className="text-ink-muted">{l.name} × {l.qty}</span>
               <div className="flex items-center gap-3">
-                <span className="font-medium text-green-700">{formatMinor(l.priceMinor * l.qty)}</span>
+                <span className="font-medium text-brand-700">{formatMinor(l.priceMinor * l.qty)}</span>
                 <button onClick={() => removeFromCart(l.productId)} className="text-red-400 hover:text-red-600 text-xs">Remove</button>
               </div>
             </div>
           ))}
           <div className="border-t mt-3 pt-3 flex justify-between font-semibold">
             <span>Total</span>
-            <span className="text-green-700">{formatMinor(total)}</span>
+            <span className="text-brand-700">{formatMinor(total)}</span>
           </div>
         </div>
 
         {/* Guest info */}
-        <div className="bg-white rounded-xl border p-5 mb-4 space-y-4">
-          <h2 className="text-sm font-semibold text-gray-700">Your name</h2>
+        <div className="bg-surface-raised rounded-card border p-5 mb-4 space-y-4">
+          <h2 className="text-sm font-semibold text-ink-muted">Your name</h2>
           <input
             value={guestName} onChange={e => setGuestName(e.target.value)}
             placeholder="Full name *"
-            className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
           />
         </div>
 
         {/* Vehicle info */}
-        <div className="bg-white rounded-xl border p-5 mb-4 space-y-3">
-          <h2 className="text-sm font-semibold text-gray-700">Your car</h2>
+        <div className="bg-surface-raised rounded-card border p-5 mb-4 space-y-3">
+          <h2 className="text-sm font-semibold text-ink-muted">Your car</h2>
           <div className="grid grid-cols-2 gap-3">
             <input value={make} onChange={e => setMake(e.target.value)} placeholder="Make (e.g. Toyota) *"
-              className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+              className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
             <input value={model} onChange={e => setModel(e.target.value)} placeholder="Model (e.g. Corolla) *"
-              className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+              className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
             <input value={color} onChange={e => setColor(e.target.value)} placeholder="Color *"
-              className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+              className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
             <input value={plate} onChange={e => setPlate(e.target.value)} placeholder="Plate (optional)"
-              className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+              className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
           </div>
         </div>
 
         {/* Payment method */}
-        <div className="bg-white rounded-xl border p-5 mb-6">
-          <h2 className="text-sm font-semibold text-gray-700 mb-3">Payment at the car</h2>
+        <div className="bg-surface-raised rounded-card border p-5 mb-6">
+          <h2 className="text-sm font-semibold text-ink-muted mb-3">Payment at the car</h2>
           <div className="grid grid-cols-2 gap-3">
             {(['cash', 'card'] as const).map(method => (
               <button
@@ -190,8 +190,8 @@ export default function CurbsidePage() {
                 onClick={() => setPaymentMethod(method)}
                 className={`py-3 rounded-lg border-2 text-sm font-medium capitalize transition-colors ${
                   paymentMethod === method
-                    ? 'border-green-500 bg-green-50 text-green-700'
-                    : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                    ? 'border-green-500 bg-green-50 text-brand-700'
+                    : 'border-gray-200 text-ink-muted hover:border-gray-300'
                 }`}
               >
                 {method === 'cash' ? '💵 Cash' : '💳 Card'}
@@ -207,7 +207,7 @@ export default function CurbsidePage() {
         <button
           onClick={placeOrder}
           disabled={submitting || cart.length === 0}
-          className="w-full py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 disabled:opacity-50"
+          className="w-full py-3 bg-brand-600 text-white rounded-card font-semibold hover:bg-brand-700 disabled:opacity-50"
         >
           {submitting ? 'Placing order…' : `Place order · ${formatMinor(total)}`}
         </button>
@@ -220,45 +220,45 @@ export default function CurbsidePage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{store?.name ?? 'Store'}</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Curbside pickup — no account needed</p>
+          <h1 className="text-2xl font-bold text-ink">{store?.name ?? 'Store'}</h1>
+          <p className="text-sm text-ink-muted mt-0.5">Curbside pickup — no account needed</p>
         </div>
         {cart.length > 0 && (
           <button
             onClick={() => setStep('checkout')}
-            className="relative px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700"
+            className="relative px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-700"
           >
             Checkout
-            <span className="ml-2 bg-white text-green-700 rounded-full px-1.5 py-0.5 text-xs font-bold">
+            <span className="ml-2 bg-surface-raised text-brand-700 rounded-full px-1.5 py-0.5 text-xs font-bold">
               {itemCount}
             </span>
           </button>
         )}
       </div>
 
-      {isLoading && <p className="text-gray-500">Loading products…</p>}
+      {isLoading && <p className="text-ink-muted">Loading products…</p>}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {products?.map((p: Product) => {
           const cartLine = cartMap.get(p.id)
           return (
-            <div key={p.id} className="bg-white rounded-xl shadow-sm border p-4">
-              <h3 className="font-medium text-gray-900 mb-1">{p.name}</h3>
+            <div key={p.id} className="bg-surface-raised rounded-card shadow-sm border p-4">
+              <h3 className="font-medium text-ink mb-1">{p.name}</h3>
               {p.description && (
-                <p className="text-xs text-gray-500 mb-2 line-clamp-2">{p.description}</p>
+                <p className="text-xs text-ink-muted mb-2 line-clamp-2">{p.description}</p>
               )}
               <div className="flex items-center justify-between mt-3">
-                <span className="font-semibold text-green-700">{formatMinor(p.priceMinor)}</span>
+                <span className="font-semibold text-brand-700">{formatMinor(p.priceMinor)}</span>
                 <div className="flex items-center gap-2">
                   {cartLine && (
-                    <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
+                    <span className="text-xs bg-green-100 text-brand-700 px-2 py-0.5 rounded-full font-medium">
                       ×{cartLine.qty}
                     </span>
                   )}
                   <button
                     onClick={() => addToCart(p)}
                     disabled={p.status !== 'active'}
-                    className="px-3 py-1 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-40"
+                    className="px-3 py-1 text-sm bg-brand-600 text-white rounded-lg hover:bg-brand-700 disabled:opacity-40"
                   >
                     {added === p.id ? 'Added!' : '+ Add'}
                   </button>
@@ -270,14 +270,14 @@ export default function CurbsidePage() {
       </div>
 
       {products?.length === 0 && !isLoading && (
-        <p className="text-gray-500 text-center py-12">No products found.</p>
+        <p className="text-ink-muted text-center py-12">No products found.</p>
       )}
 
       {cart.length > 0 && (
         <div className="fixed bottom-6 inset-x-0 flex justify-center px-4">
           <button
             onClick={() => setStep('checkout')}
-            className="w-full max-w-sm py-3 bg-green-600 text-white rounded-xl font-semibold shadow-lg hover:bg-green-700"
+            className="w-full max-w-sm py-3 bg-brand-600 text-white rounded-card font-semibold shadow-lg hover:bg-brand-700"
           >
             Checkout · {itemCount} items · {formatMinor(total)}
           </button>

@@ -1,15 +1,29 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate } from 'react-router-dom'
+import { MapPinned, Package, RotateCcw, Star, CreditCard, XCircle } from 'lucide-react'
 import { ordersApi, type Order } from '../../api/orders'
 import { cartApi } from '../../api/cart'
 import Badge from '../../components/Badge'
+import Button from '../../components/ui/Button'
+import Card from '../../components/ui/Card'
+import EmptyState from '../../components/ui/EmptyState'
+import Modal from '../../components/ui/Modal'
+import { PageSpinner } from '../../components/ui/Skeleton'
+import { Textarea } from '../../components/ui/Input'
 import { formatMinor } from '../../lib/money'
 
-const TRACKABLE  = ['assigned', 'out_for_delivery']
+const TRACKABLE = ['assigned', 'out_for_delivery']
 const REVIEWABLE = ['delivered']
 const CANCELLABLE = ['pending_payment', 'placed', 'accepted']
 const AWAITING_PAYMENT = ['pending_payment']
+
+const TIMELINE = ['placed', 'accepted', 'preparing', 'ready', 'assigned', 'out_for_delivery', 'delivered']
+
+function statusIndex(status: string) {
+  const i = TIMELINE.indexOf(status)
+  return i >= 0 ? i : 0
+}
 
 export default function OrdersPage() {
   const qc = useQueryClient()
@@ -23,7 +37,7 @@ export default function OrdersPage() {
     queryKey: ['orders-mine'],
     queryFn: () => ordersApi.listMine(),
     refetchInterval: 30_000,
-    staleTime:       10_000,
+    staleTime: 10_000,
   })
 
   const { mutate: cancel } = useMutation({
@@ -31,7 +45,7 @@ export default function OrdersPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['orders-mine'] }),
   })
 
-  const { mutate: submitReview } = useMutation({
+  const { mutate: submitReview, isPending: reviewing } = useMutation({
     mutationFn: () => ordersApi.review(reviewOrderId!, rating, comment || undefined),
     onSuccess: () => {
       setReviewOrderId(null)
@@ -43,9 +57,7 @@ export default function OrdersPage() {
 
   async function reorder(order: Order) {
     if (!order.lines?.length) {
-      // Fetch lines if not embedded
-      const full = await ordersApi.get(order.id)
-      order = full
+      order = await ordersApi.get(order.id)
     }
     if (!order.lines?.length || !order.tenantId) return
     setReordering(order.id)
@@ -53,10 +65,10 @@ export default function OrdersPage() {
       await Promise.all(
         order.lines.map(l =>
           cartApi.addLine(order.tenantId, {
-            productId:  l.productId,
-            name:       l.name,
+            productId: l.productId,
+            name: l.name,
             priceMinor: l.priceMinor,
-            qty:        l.qty,
+            qty: l.qty,
           })
         )
       )
@@ -67,101 +79,135 @@ export default function OrdersPage() {
   }
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">My Orders</h1>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-ink">My Orders</h1>
+        <p className="text-sm text-ink-muted mt-1">Track, review, and reorder your groceries</p>
+      </div>
 
-      {isLoading && <p className="text-gray-500">Loading…</p>}
+      {isLoading && <PageSpinner />}
 
-      <div className="space-y-3">
-        {orders?.map((order: Order) => (
-          <div key={order.id} className="bg-white rounded-xl border p-5">
-            <div className="flex items-start justify-between mb-2">
-              <div>
-                <p className="font-medium text-gray-900 text-sm">{order.id.slice(0, 8)}…</p>
-                <p className="text-xs text-gray-500">{new Date(order.placedAt).toLocaleString()}</p>
+      <div className="space-y-4">
+        {orders?.map((order: Order) => {
+          const idx = statusIndex(order.status)
+          return (
+            <Card key={order.id} className="space-y-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="font-semibold text-ink flex items-center gap-2">
+                    <Package className="h-4 w-4 text-brand-600" />
+                    Order #{order.id.slice(0, 8)}
+                  </p>
+                  <p className="text-xs text-ink-faint mt-0.5">{new Date(order.placedAt).toLocaleString()}</p>
+                </div>
+                <div className="flex flex-col items-end gap-1">
+                  <Badge status={order.status} />
+                  {(order.payment?.status === 'refunded' || order.payment?.status === 'partially_refunded') && (
+                    <Badge status={order.payment.status} />
+                  )}
+                </div>
               </div>
-              <div className="flex flex-col items-end gap-1">
-                <Badge status={order.status} />
-                {(order.payment?.status === 'refunded' || order.payment?.status === 'partially_refunded') && (
-                  <Badge status={order.payment.status} />
+
+              {/* Mini timeline */}
+              <div className="flex gap-1">
+                {TIMELINE.map((step, i) => (
+                  <div
+                    key={step}
+                    title={step.replace(/_/g, ' ')}
+                    className={`h-1.5 flex-1 rounded-full ${i <= idx ? 'bg-brand-600' : 'bg-line'}`}
+                  />
+                ))}
+              </div>
+
+              <p className="text-sm text-ink-muted flex items-start gap-1.5">
+                <MapPinned className="h-4 w-4 mt-0.5 shrink-0 text-brand-600" />
+                {order.addressGeo?.address ?? '—'}
+              </p>
+              <p className="font-bold text-brand-700 dark:text-brand-500">{formatMinor(order.totalMinor)}</p>
+
+              <div className="flex flex-wrap gap-2">
+                {AWAITING_PAYMENT.includes(order.status) && (
+                  <Link to={`/checkout/${order.id}`}>
+                    <Button size="sm" leftIcon={<CreditCard className="h-3.5 w-3.5" />}>Pay now</Button>
+                  </Link>
                 )}
+                {TRACKABLE.includes(order.status) && (
+                  <Link to={`/orders/${order.id}/track`}>
+                    <Button size="sm" variant="outline" leftIcon={<MapPinned className="h-3.5 w-3.5" />}>Track</Button>
+                  </Link>
+                )}
+                {REVIEWABLE.includes(order.status) && (
+                  <Button size="sm" variant="secondary" leftIcon={<Star className="h-3.5 w-3.5" />} onClick={() => setReviewOrderId(order.id)}>
+                    Review
+                  </Button>
+                )}
+                {CANCELLABLE.includes(order.status) && (
+                  <Button size="sm" variant="ghost" className="text-danger" leftIcon={<XCircle className="h-3.5 w-3.5" />} onClick={() => cancel(order.id)}>
+                    Cancel
+                  </Button>
+                )}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  leftIcon={<RotateCcw className="h-3.5 w-3.5" />}
+                  loading={reordering === order.id}
+                  onClick={() => reorder(order)}
+                >
+                  Order again
+                </Button>
               </div>
-            </div>
-
-            <p className="text-sm text-gray-700 mb-1">{order.addressGeo?.address}</p>
-            <p className="font-semibold text-green-700 mb-3">{formatMinor(order.totalMinor)}</p>
-
-            <div className="flex gap-2 flex-wrap">
-              {AWAITING_PAYMENT.includes(order.status) && (
-                <Link to={`/checkout/${order.id}`}
-                  className="px-3 py-1 text-xs bg-amber-500 text-white rounded hover:bg-amber-600">
-                  Complete payment
-                </Link>
-              )}
-              {TRACKABLE.includes(order.status) && (
-                <Link to={`/orders/${order.id}/track`}
-                  className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">
-                  Track
-                </Link>
-              )}
-              {REVIEWABLE.includes(order.status) && (
-                <button onClick={() => setReviewOrderId(order.id)}
-                  className="px-3 py-1 text-xs bg-yellow-500 text-white rounded hover:bg-yellow-600">
-                  Review
-                </button>
-              )}
-              {CANCELLABLE.includes(order.status) && (
-                <button onClick={() => cancel(order.id)}
-                  className="px-3 py-1 text-xs border border-red-400 text-red-500 rounded hover:bg-red-50">
-                  Cancel
-                </button>
-              )}
-              {/* Repeat last order — works for any completed or active order */}
-              <button
-                onClick={() => reorder(order)}
-                disabled={reordering === order.id}
-                className="px-3 py-1 text-xs bg-green-50 border border-green-400 text-green-700 rounded hover:bg-green-100 disabled:opacity-50"
-              >
-                {reordering === order.id ? 'Adding…' : 'Order again'}
-              </button>
-            </div>
-          </div>
-        ))}
+            </Card>
+          )
+        })}
       </div>
 
       {orders?.length === 0 && !isLoading && (
-        <p className="text-gray-500 text-center py-12">No orders yet.</p>
+        <EmptyState
+          icon={<Package className="h-6 w-6" />}
+          title="No orders yet"
+          description="When you place an order, it will show up here with live tracking."
+          actionLabel="Browse stores"
+          onAction={() => navigate('/stores')}
+        />
       )}
 
-      {reviewOrderId && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-sm shadow-xl">
-            <h2 className="font-bold text-gray-900 mb-4">Leave a review</h2>
-            <div className="mb-3">
-              <label className="block text-sm mb-1 font-medium">Rating (1–5)</label>
-              <input type="number" min={1} max={5} value={rating}
-                onChange={e => setRating(Number(e.target.value))}
-                className="border rounded px-3 py-1.5 text-sm w-20" />
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm mb-1 font-medium">Comment</label>
-              <textarea value={comment} onChange={e => setComment(e.target.value)}
-                rows={3}
-                className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
-            </div>
-            <div className="flex gap-2 justify-end">
-              <button onClick={() => setReviewOrderId(null)}
-                className="px-4 py-1.5 text-sm border rounded hover:bg-gray-50">
-                Cancel
-              </button>
-              <button onClick={() => submitReview()}
-                className="px-4 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700">
-                Submit
-              </button>
+      <Modal
+        open={!!reviewOrderId}
+        onClose={() => setReviewOrderId(null)}
+        title="Leave a review"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setReviewOrderId(null)}>Cancel</Button>
+            <Button onClick={() => submitReview()} loading={reviewing}>Submit</Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div>
+            <p className="text-sm font-medium text-ink mb-2">Rating</p>
+            <div className="flex gap-1">
+              {[1, 2, 3, 4, 5].map(n => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setRating(n)}
+                  className="p-1"
+                  aria-label={`${n} stars`}
+                >
+                  <Star className={`h-6 w-6 ${n <= rating ? 'fill-amber-400 text-amber-400' : 'text-line-strong'}`} />
+                </button>
+              ))}
             </div>
           </div>
+          <Textarea
+            label="Comment"
+            value={comment}
+            onChange={e => setComment(e.target.value)}
+            rows={3}
+            placeholder="How was your order?"
+          />
         </div>
-      )}
+      </Modal>
     </div>
   )
 }

@@ -5,10 +5,10 @@ import { formatMinor, formatMajor } from '../../lib/money'
 
 function StatCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
   return (
-    <div className="bg-white rounded-xl border p-5">
-      <p className="text-sm text-gray-500 mb-1">{label}</p>
-      <p className="text-2xl font-bold text-gray-900">{value}</p>
-      {sub && <p className="text-xs text-gray-400 mt-1">{sub}</p>}
+    <div className="bg-surface-raised rounded-card border p-5">
+      <p className="text-sm text-ink-muted mb-1">{label}</p>
+      <p className="text-2xl font-bold text-ink">{value}</p>
+      {sub && <p className="text-xs text-ink-faint mt-1">{sub}</p>}
     </div>
   )
 }
@@ -50,7 +50,7 @@ export default function ReportsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Reports</h1>
+      <h1 className="text-2xl font-bold text-ink mb-6">Reports</h1>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
         <StatCard label="Total Orders"      value={totalOrders} />
@@ -69,30 +69,30 @@ export default function ReportsPage() {
       <div className="mb-8">
         <div className="flex items-end gap-3 mb-4 flex-wrap">
           <div>
-            <label className="block text-xs text-gray-500 mb-1">From</label>
+            <label className="block text-xs text-ink-muted mb-1">From</label>
             <input type="date" value={from} onChange={e => setFrom(e.target.value)}
               className="border rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">To</label>
+            <label className="block text-xs text-ink-muted mb-1">To</label>
             <input type="date" value={to} onChange={e => setTo(e.target.value)}
               className="border rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border overflow-hidden">
+        <div className="bg-surface-raised rounded-card border overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b">
+            <thead className="bg-surface-muted border-b">
               <tr>
-                <th className="text-left px-4 py-3 font-medium text-gray-700">Date</th>
-                <th className="text-right px-4 py-3 font-medium text-gray-700">Revenue</th>
+                <th className="text-left px-4 py-3 font-medium text-ink-muted">Date</th>
+                <th className="text-right px-4 py-3 font-medium text-ink-muted">Revenue</th>
               </tr>
             </thead>
             <tbody className="divide-y">
               {revenue?.map(row => (
-                <tr key={row.date} className="hover:bg-gray-50">
-                  <td className="px-4 py-2 text-gray-600">{row.date}</td>
-                  <td className="px-4 py-2 text-right font-medium text-green-700">
+                <tr key={row.date} className="hover:bg-surface-muted">
+                  <td className="px-4 py-2 text-ink-muted">{row.date}</td>
+                  <td className="px-4 py-2 text-right font-medium text-brand-700 dark:text-brand-500">
                     {formatMajor(row.revenueMajor)}
                   </td>
                 </tr>
@@ -100,37 +100,37 @@ export default function ReportsPage() {
             </tbody>
           </table>
           {revenue?.length === 0 && (
-            <p className="text-center text-gray-400 py-6">No revenue data for this period.</p>
+            <p className="text-center text-ink-faint py-6">No revenue data for this period.</p>
           )}
         </div>
       </div>
 
       <div>
-        <h2 className="text-lg font-semibold text-gray-800 mb-3">Store Leaderboard</h2>
-        <div className="bg-white rounded-xl border overflow-hidden">
+        <h2 className="text-lg font-semibold text-ink mb-3">Store Leaderboard</h2>
+        <div className="bg-surface-raised rounded-card border overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b">
+            <thead className="bg-surface-muted border-b">
               <tr>
-                <th className="text-left px-4 py-3 font-medium text-gray-700">#</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-700">Store</th>
-                <th className="text-right px-4 py-3 font-medium text-gray-700">Orders</th>
-                <th className="text-right px-4 py-3 font-medium text-gray-700">Revenue</th>
-                <th className="text-right px-4 py-3 font-medium text-gray-700">Avg Order</th>
+                <th className="text-left px-4 py-3 font-medium text-ink-muted">#</th>
+                <th className="text-left px-4 py-3 font-medium text-ink-muted">Store</th>
+                <th className="text-right px-4 py-3 font-medium text-ink-muted">Orders</th>
+                <th className="text-right px-4 py-3 font-medium text-ink-muted">Revenue</th>
+                <th className="text-right px-4 py-3 font-medium text-ink-muted">Avg Order</th>
               </tr>
             </thead>
             <tbody className="divide-y">
               {stores?.map((row, i) => (
-                <tr key={row.tenantId} className="hover:bg-gray-50">
-                  <td className="px-4 py-2 text-gray-400 font-mono text-xs">{i + 1}</td>
+                <tr key={row.tenantId} className="hover:bg-surface-muted">
+                  <td className="px-4 py-2 text-ink-faint font-mono text-xs">{i + 1}</td>
                   <td className="px-4 py-2">
-                    <p className="font-medium text-gray-800">{row.storeName ?? 'Unknown'}</p>
-                    <p className="text-xs text-gray-400 font-mono">{row.tenantId.slice(0, 8)}…</p>
+                    <p className="font-medium text-ink">{row.storeName ?? 'Unknown'}</p>
+                    <p className="text-xs text-ink-faint font-mono">{row.tenantId.slice(0, 8)}…</p>
                   </td>
-                  <td className="px-4 py-2 text-right text-gray-700">{row.orderCount}</td>
-                  <td className="px-4 py-2 text-right font-medium text-green-700">
+                  <td className="px-4 py-2 text-right text-ink-muted">{row.orderCount}</td>
+                  <td className="px-4 py-2 text-right font-medium text-brand-700 dark:text-brand-500">
                     {formatMajor(row.revenueMajor)}
                   </td>
-                  <td className="px-4 py-2 text-right text-gray-600">
+                  <td className="px-4 py-2 text-right text-ink-muted">
                     {formatMinor(row.avgOrderSize)}
                   </td>
                 </tr>
@@ -138,7 +138,7 @@ export default function ReportsPage() {
             </tbody>
           </table>
           {stores?.length === 0 && (
-            <p className="text-center text-gray-400 py-6">No data yet.</p>
+            <p className="text-center text-ink-faint py-6">No data yet.</p>
           )}
         </div>
       </div>

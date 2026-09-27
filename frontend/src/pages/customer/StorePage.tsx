@@ -1,10 +1,20 @@
 import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { Check, Search, ShoppingCart, Truck, X } from 'lucide-react'
 import { catalogApi, type Product } from '../../api/catalog'
 import { cartApi } from '../../api/cart'
 import { storesApi } from '../../api/stores'
 import { formatMinor } from '../../lib/money'
+import Badge from '../../components/Badge'
+import Button from '../../components/ui/Button'
+import Card from '../../components/ui/Card'
+import Chip from '../../components/ui/Chip'
+import EmptyState from '../../components/ui/EmptyState'
+import { Input } from '../../components/ui/Input'
+import { SkeletonCard, PageSpinner } from '../../components/ui/Skeleton'
+import LocationMap from '../../components/map/LocationMap'
+import { getCategoryMeta, inferStoreCategory } from '../../lib/categories'
 
 export default function StorePage() {
   const { id } = useParams<{ id: string }>()
@@ -38,6 +48,14 @@ export default function StorePage() {
     staleTime: 60_000,
   })
 
+  const { data: cart } = useQuery({
+    queryKey: ['cart', id],
+    queryFn: () => cartApi.get(id!),
+    enabled: !!id,
+  })
+
+  const cartCount = cart?.lines?.reduce((s, l) => s + l.qty, 0) ?? 0
+
   const { mutate: addToCart } = useMutation({
     mutationFn: (product: Product) =>
       cartApi.addLine(id!, {
@@ -53,89 +71,138 @@ export default function StorePage() {
     },
   })
 
-  function clearFilters() {
-    setQ('')
-    setCategoryId('')
-    setMaxPrice('')
-  }
-
-  const hasFilters = q || categoryId || maxPrice
+  const hasFilters = !!(q || categoryId || maxPrice)
+  const storeCategory = inferStoreCategory(store?.name ?? '')
+  const { Icon, label } = getCategoryMeta(storeCategory)
+  const storePoint = store?.lat != null && store?.lng != null
+    ? { lat: store.lat, lng: store.lng }
+    : null
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">{store?.name}</h1>
-        </div>
-        <Link to={`/cart/${id}`}
-          className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700">
-          View Cart
-        </Link>
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3 mb-5">
-        <input
-          value={q} onChange={e => setQ(e.target.value)}
-          placeholder="Search products…"
-          className="border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 flex-1 min-w-40"
-        />
-        {categories && categories.length > 0 && (
-          <select
-            value={categoryId} onChange={e => setCategoryId(e.target.value)}
-            className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-          >
-            <option value="">All categories</option>
-            {categories.map(c => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
-        )}
-        <div className="flex items-center gap-1">
-          <span className="text-sm text-gray-500">Max $</span>
-          <input
-            type="number" min={0} value={maxPrice}
-            onChange={e => setMaxPrice(e.target.value)}
-            placeholder="Any"
-            className="border rounded-lg px-3 py-2 text-sm w-24 focus:outline-none focus:ring-2 focus:ring-green-500"
+    <div className="space-y-6">
+      <section className="overflow-hidden rounded-card border border-line bg-surface-raised shadow-soft">
+        <div className="relative h-36 sm:h-44 bg-gradient-to-br from-brand-600 via-brand-700 to-brand-900">
+          <div className="absolute inset-0 opacity-25"
+            style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, white, transparent 40%)' }}
           />
+          <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6 flex flex-wrap items-end justify-between gap-4">
+            <div className="flex items-end gap-3">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-surface-raised text-brand-600 border border-line shadow-lift">
+                <Icon className="h-7 w-7" />
+              </div>
+              <div className="text-white pb-0.5">
+                <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">{store?.name ?? 'Store'}</h1>
+                <p className="text-sm text-white/80 flex items-center gap-2 mt-0.5">
+                  <span>{label}</span>
+                  {store && <Badge status={store.status} className="bg-white/20 text-white border-0" />}
+                </p>
+              </div>
+            </div>
+            <Link to={`/cart/${id}`}>
+              <Button className="bg-white text-brand-800 hover:bg-brand-50 shadow-none" leftIcon={<ShoppingCart className="h-4 w-4" />}>
+                Cart{cartCount > 0 ? ` (${cartCount})` : ''}
+              </Button>
+            </Link>
+          </div>
         </div>
-        {hasFilters && (
-          <button onClick={clearFilters}
-            className="text-sm text-gray-500 hover:text-gray-700 underline">
-            Clear
-          </button>
+
+        <div className="grid gap-4 p-5 sm:grid-cols-[1fr_14rem] sm:items-center">
+          <div className="flex flex-wrap gap-2 text-sm text-ink-muted">
+            <span className="inline-flex items-center gap-1.5 rounded-pill bg-surface-muted px-3 py-1.5">
+              <Truck className="h-3.5 w-3.5 text-brand-600" /> {store?.dispatchPolicy ?? '—'}
+            </span>
+            {store && (
+              <span className="inline-flex items-center gap-1.5 rounded-pill bg-surface-muted px-3 py-1.5">
+                Commission {store.commissionBps / 100}%
+              </span>
+            )}
+          </div>
+          {storePoint && (
+            <LocationMap
+              center={storePoint}
+              markers={[{ id: store!.id, position: storePoint, title: store!.name }]}
+              height="7rem"
+              zoom={15}
+            />
+          )}
+        </div>
+      </section>
+
+      <div className="sticky top-[4.25rem] z-20 -mx-1 rounded-2xl border border-line bg-surface-raised/95 backdrop-blur-md p-3 shadow-soft space-y-3">
+        <div className="flex flex-wrap gap-2">
+          <Input
+            value={q}
+            onChange={e => setQ(e.target.value)}
+            placeholder="Search products…"
+            leftIcon={<Search className="h-4 w-4" />}
+            className="flex-1 min-w-[12rem]"
+          />
+          <Input
+            type="number"
+            min={0}
+            value={maxPrice}
+            onChange={e => setMaxPrice(e.target.value)}
+            placeholder="Max $"
+            className="w-28"
+          />
+          {hasFilters && (
+            <Button variant="ghost" size="sm" leftIcon={<X className="h-3.5 w-3.5" />} onClick={() => { setQ(''); setCategoryId(''); setMaxPrice('') }}>
+              Clear
+            </Button>
+          )}
+        </div>
+        {categories && categories.length > 0 && (
+          <div className="flex gap-2 overflow-x-auto pb-0.5">
+            <Chip active={!categoryId} onClick={() => setCategoryId('')}>All</Chip>
+            {categories.map(c => (
+              <Chip key={c.id} active={categoryId === c.id} onClick={() => setCategoryId(c.id)}>
+                {c.name}
+              </Chip>
+            ))}
+          </div>
         )}
       </div>
 
-      {isLoading && <p className="text-gray-500">Loading products…</p>}
+      {isLoading && (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
+        </div>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {products?.map((p: Product) => (
-          <div key={p.id} className="bg-white rounded-xl shadow-sm border p-4">
-            <h3 className="font-medium text-gray-900 mb-1">{p.name}</h3>
+          <Card key={p.id} hover padding="md" className="flex flex-col">
+            <div className="mb-3 flex h-28 items-center justify-center rounded-2xl bg-gradient-to-br from-surface-muted to-brand-50 dark:to-brand-100/20 text-brand-600/40">
+              <span className="text-3xl font-extrabold opacity-30">{p.name.slice(0, 1)}</span>
+            </div>
+            <h3 className="font-semibold text-ink">{p.name}</h3>
             {p.description && (
-              <p className="text-xs text-gray-500 mb-2 line-clamp-2">{p.description}</p>
+              <p className="mt-1 text-xs text-ink-muted line-clamp-2 flex-1">{p.description}</p>
             )}
-            <div className="flex items-center justify-between mt-3">
-              <span className="font-semibold text-green-700">
-                {formatMinor(p.priceMinor)}
-              </span>
-              <button
+            <div className="mt-4 flex items-center justify-between gap-2">
+              <span className="font-bold text-brand-700 dark:text-brand-500">{formatMinor(p.priceMinor)}</span>
+              <Button
+                size="sm"
                 onClick={() => addToCart(p)}
                 disabled={p.status !== 'active'}
-                className="px-3 py-1 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-40"
+                leftIcon={added === p.id ? <Check className="h-3.5 w-3.5" /> : undefined}
               >
-                {added === p.id ? 'Added!' : '+ Cart'}
-              </button>
+                {added === p.id ? 'Added' : 'Add'}
+              </Button>
             </div>
-          </div>
+          </Card>
         ))}
       </div>
 
       {products?.length === 0 && !isLoading && (
-        <p className="text-gray-500 text-center py-12">No products found.</p>
+        <EmptyState
+          icon={<Search className="h-6 w-6" />}
+          title="No products found"
+          description="Try another search or clear filters."
+        />
       )}
+
+      {isLoading && !products && <PageSpinner />}
     </div>
   )
 }

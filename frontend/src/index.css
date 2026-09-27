@@ -2,21 +2,94 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* Brand — #16a34a */
+  --brand-50:  240 253 244;
+  --brand-100: 220 252 231;
+  --brand-200: 187 247 208;
+  --brand-300: 134 239 172;
+  --brand-400: 74 222 128;
+  --brand-500: 34 197 94;
+  --brand-600: 22 163 74;
+  --brand-700: 21 128 61;
+  --brand-800: 22 101 52;
+  --brand-900: 20 83 45;
+
+  --surface: 252 252 251;
+  --surface-muted: 244 245 243;
+  --surface-raised: 255 255 255;
+  --ink: 23 23 23;
+  --ink-muted: 82 82 82;
+  --ink-faint: 140 140 140;
+  --ink-inverse: 255 255 255;
+  --line: 228 229 226;
+  --line-strong: 200 201 197;
+
+  --success: 22 163 74;
+  --warning: 217 119 6;
+  --danger: 220 38 38;
+  --info: 2 132 199;
+
+  --shadow-soft: 0 1px 2px rgb(23 23 23 / 0.04), 0 4px 16px rgb(23 23 23 / 0.04);
+  --shadow-lift: 0 4px 12px rgb(23 23 23 / 0.06), 0 12px 32px rgb(23 23 23 / 0.06);
+  --shadow-pop: 0 8px 24px rgb(22 163 74 / 0.18);
+
+  color-scheme: light;
+}
+
+.dark {
+  --surface: 15 17 16;
+  --surface-muted: 24 27 25;
+  --surface-raised: 30 34 32;
+  --ink: 244 245 243;
+  --ink-muted: 176 180 176;
+  --ink-faint: 120 126 120;
+  --ink-inverse: 15 17 16;
+  --line: 48 54 50;
+  --line-strong: 70 78 72;
+
+  --brand-50: 20 40 28;
+  --brand-100: 24 55 36;
+  --brand-200: 28 80 48;
+
+  --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.35), 0 4px 16px rgb(0 0 0 / 0.25);
+  --shadow-lift: 0 8px 24px rgb(0 0 0 / 0.4);
+  --shadow-pop: 0 8px 28px rgb(22 163 74 / 0.28);
+
+  color-scheme: dark;
+}
+
 @layer base {
-  /* Latin UI */
-  body {
-    font-family: 'Inter', system-ui, sans-serif;
+  html {
+    scroll-behavior: smooth;
   }
 
-  /* Arabic UI — applied automatically when dir="rtl" is set on <html> */
-  :root[dir="rtl"] body {
-    font-family: 'Noto Sans Arabic', system-ui, sans-serif;
+  body {
+    @apply bg-surface text-ink font-sans antialiased;
+    font-feature-settings: 'ss01' on, 'cv11' on;
+  }
+
+  :root[dir='rtl'] body {
+    font-family: 'Noto Sans Arabic', 'Plus Jakarta Sans', system-ui, sans-serif;
     letter-spacing: 0;
   }
 
-  /* Smooth direction transition */
-  html {
-    transition: none;
+  *:focus-visible {
+    @apply outline-none ring-2 ring-brand-600/60 ring-offset-2 ring-offset-surface;
+  }
+
+  ::selection {
+    @apply bg-brand-200 text-brand-900;
+  }
+}
+
+@layer components {
+  .page-enter {
+    @apply animate-fade-up;
+  }
+
+  .skeleton {
+    @apply rounded-lg bg-gradient-to-r from-surface-muted via-line/60 to-surface-muted bg-[length:200%_100%] animate-shimmer;
   }
 }
 

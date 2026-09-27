@@ -4,6 +4,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 import PhonePage from './pages/PhonePage'
 import LoginPage from './pages/LoginPage'
 import CurbsidePage from './pages/customer/CurbsidePage'
+import HomePage from './pages/customer/HomePage'
 import StoresPage from './pages/customer/StoresPage'
 import StorePage from './pages/customer/StorePage'
 import CartPage from './pages/customer/CartPage'
@@ -25,7 +26,7 @@ function RoleHome() {
   if (role === 'admin')   return <Navigate to="/admin"   replace />
   if (role === 'manager') return <Navigate to="/manager" replace />
   if (role === 'rider')   return <Navigate to="/rider"   replace />
-  return <Navigate to="/stores" replace />
+  return <HomePage />
 }
 
 function PublicRoute({ element }: { element: JSX.Element }) {
@@ -37,14 +38,11 @@ function PublicRoute({ element }: { element: JSX.Element }) {
 export default function App() {
   return (
     <Routes>
-      {/* Fully public — no account required */}
       <Route path="/curbside/:tenantId" element={<CurbsidePage />} />
 
-      {/* Public entry points — redirect away if already logged in */}
       <Route path="/phone" element={<PublicRoute element={<PhonePage />} />} />
       <Route path="/login" element={<PublicRoute element={<LoginPage />} />} />
 
-      {/* Authenticated app */}
       <Route element={<ProtectedRoute />}>
         <Route path="/" element={<RoleHome />} />
 

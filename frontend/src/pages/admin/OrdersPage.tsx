@@ -34,7 +34,7 @@ export default function AdminOrdersPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Orders</h1>
+      <h1 className="text-2xl font-bold text-ink mb-6">Orders</h1>
 
       <div className="flex gap-2 mb-4">
         {FILTERS.map(f => (
@@ -44,7 +44,7 @@ export default function AdminOrdersPage() {
             className={`px-3 py-1.5 text-xs rounded-lg border font-medium ${
               filter === f.value
                 ? 'bg-indigo-600 text-white border-indigo-600'
-                : 'border-gray-300 text-gray-600 hover:border-indigo-400'
+                : 'border-line text-ink-muted hover:border-indigo-400'
             }`}
           >
             {f.label}
@@ -52,19 +52,19 @@ export default function AdminOrdersPage() {
         ))}
       </div>
 
-      {isLoading && <p className="text-gray-500">Loading…</p>}
+      {isLoading && <p className="text-ink-muted">Loading…</p>}
 
-      <div className="bg-white rounded-xl border overflow-hidden overflow-x-auto">
+      <div className="bg-surface-raised rounded-card border overflow-hidden overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b">
+          <thead className="bg-surface-muted border-b">
             <tr>
-              <th className="text-left px-4 py-3 font-medium text-gray-700">Order</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-700">Store</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-700">Customer</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-700">Amount</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-700">Payment</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-700">Transaction</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-700">Date</th>
+              <th className="text-left px-4 py-3 font-medium text-ink-muted">Order</th>
+              <th className="text-left px-4 py-3 font-medium text-ink-muted">Store</th>
+              <th className="text-left px-4 py-3 font-medium text-ink-muted">Customer</th>
+              <th className="text-left px-4 py-3 font-medium text-ink-muted">Amount</th>
+              <th className="text-left px-4 py-3 font-medium text-ink-muted">Payment</th>
+              <th className="text-left px-4 py-3 font-medium text-ink-muted">Transaction</th>
+              <th className="text-left px-4 py-3 font-medium text-ink-muted">Date</th>
               <th className="px-4 py-3" />
             </tr>
           </thead>
@@ -74,19 +74,19 @@ export default function AdminOrdersPage() {
               const remaining = p ? p.amountMinor - p.refundedMinor : 0
               const canRefund = p?.status === 'captured' || p?.status === 'partially_refunded'
               return (
-                <tr key={row.order.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 font-mono text-xs text-gray-500">{row.order.id.slice(0, 8)}…</td>
-                  <td className="px-4 py-3 text-gray-700">{row.storeName ?? '—'}</td>
-                  <td className="px-4 py-3 text-gray-700">{row.customerEmail ?? row.order.curbsideName ?? '—'}</td>
+                <tr key={row.order.id} className="hover:bg-surface-muted">
+                  <td className="px-4 py-3 font-mono text-xs text-ink-muted">{row.order.id.slice(0, 8)}…</td>
+                  <td className="px-4 py-3 text-ink-muted">{row.storeName ?? '—'}</td>
+                  <td className="px-4 py-3 text-ink-muted">{row.customerEmail ?? row.order.curbsideName ?? '—'}</td>
                   <td className="px-4 py-3">
                     {p ? formatMinor(p.amountMinor) : formatMinor(row.order.totalMinor)}
                     {p && p.refundedMinor > 0 && (
                       <span className="text-xs text-red-500 block">-{formatMinor(p.refundedMinor)} refunded</span>
                     )}
                   </td>
-                  <td className="px-4 py-3">{p ? <Badge status={p.status} /> : <span className="text-gray-400">—</span>}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-gray-500">{p?.stripePaymentIntentId ?? '—'}</td>
-                  <td className="px-4 py-3 text-gray-500">{new Date(row.order.placedAt).toLocaleDateString()}</td>
+                  <td className="px-4 py-3">{p ? <Badge status={p.status} /> : <span className="text-ink-faint">—</span>}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-ink-muted">{p?.stripePaymentIntentId ?? '—'}</td>
+                  <td className="px-4 py-3 text-ink-muted">{new Date(row.order.placedAt).toLocaleDateString()}</td>
                   <td className="px-4 py-3 text-right">
                     {canRefund && (
                       refunding?.orderId === row.order.id ? (
@@ -105,7 +105,7 @@ export default function AdminOrdersPage() {
                           >
                             Confirm
                           </button>
-                          <button onClick={() => setRefunding(null)} className="text-xs text-gray-400 hover:underline">
+                          <button onClick={() => setRefunding(null)} className="text-xs text-ink-faint hover:underline">
                             Cancel
                           </button>
                         </div>
@@ -120,7 +120,7 @@ export default function AdminOrdersPage() {
                           </button>
                           <button
                             onClick={() => setRefunding({ orderId: row.order.id, value: String(remaining / 100) })}
-                            className="px-2 py-1 text-xs border text-gray-600 rounded hover:bg-gray-50 font-medium"
+                            className="px-2 py-1 text-xs border text-ink-muted rounded hover:bg-surface-muted font-medium"
                           >
                             Partial
                           </button>
@@ -134,7 +134,7 @@ export default function AdminOrdersPage() {
           </tbody>
         </table>
         {rows?.length === 0 && !isLoading && (
-          <p className="text-center text-gray-400 py-8">No orders found.</p>
+          <p className="text-center text-ink-faint py-8">No orders found.</p>
         )}
       </div>
     </div>
