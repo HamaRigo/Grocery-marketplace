@@ -144,7 +144,7 @@ export default function HomePage() {
                 navigate('/stores?view=split')
               }}
             />
-            <div className="absolute bottom-4 right-4 left-auto rtl:left-4 rtl:right-auto inset-inline-4 sm:inset-inline-start-auto sm:inset-inline-end-4 sm:w-56">
+            <div className="absolute bottom-4 right-4 left-auto w-full sm:w-56">
               <button type="button" onClick={useMyLocation} className="w-full text-start">
                 <Card padding="sm" className="shadow-lift border-brand-200/50 hover:border-brand-400 transition-colors">
                   <p className="text-xs text-ink-faint flex items-center gap-1">
