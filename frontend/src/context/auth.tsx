@@ -20,15 +20,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const lastLogout = localStorage.getItem('auth_last_logout')
 
+    if (lastLogout) {
+      localStorage.removeItem('auth_last_logout')
+      setUser(null)
+      setLoading(false)
+      return
+    }
+
     authApi.me()
-      .then(user => {
-        if (lastLogout) {
-          localStorage.removeItem('auth_last_logout')
-          setUser(null)
-        } else {
-          setUser(user)
-        }
-      })
+      .then(setUser)
       .catch(() => setUser(null))
       .finally(() => setLoading(false))
   }, [])
