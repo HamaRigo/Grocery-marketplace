@@ -5,6 +5,14 @@ import { storesApi, type Store } from '../../api/stores'
 import { billingApi } from '../../api/billing'
 import Badge from '../../components/Badge'
 import { formatMinor } from '../../lib/money'
+import Button from '../../components/ui/Button'
+import { Globe } from 'lucide-react'
+
+export default function AdminStoresPage() {
+  const qc = useQueryClient()
+  const [editingCommission, setEditingCommission] = useState<{ id: string; value: string } | null>(null)
+  const [editingPrice, setEditingPrice] = useState<{ tenantId: string; value: string } | null>(null)
+// ... (rest of the file remains same until the return statement)
 
 export default function AdminStoresPage() {
   const qc = useQueryClient()
@@ -54,11 +62,18 @@ export default function AdminStoresPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-ink">Stores</h1>
-        <Link to="/admin/reports"
-          className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700">
-          Reports
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link to="/admin/discovery"
+            className="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-700 flex items-center gap-2">
+            <Globe className="h-4 w-4" /> Discover Stores
+          </Link>
+          <Link to="/admin/reports"
+            className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700">
+            Reports
+          </Link>
+        </div>
       </div>
+
 
       {isLoading && <p className="text-ink-muted">Loading…</p>}
 
