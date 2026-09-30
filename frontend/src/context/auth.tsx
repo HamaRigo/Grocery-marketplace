@@ -18,14 +18,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Check existing session on mount (e.g. page refresh).
   useEffect(() => {
-    if (sessionStorage.getItem('auth_logout_pending') === 'true') {
-      sessionStorage.removeItem('auth_logout_pending')
-      setLoading(false)
-      return
-    }
+    const lastLogout = localStorage.getItem('auth_last_logout')
 
     authApi.me()
-      .then(setUser)
+      .then(user => {
+        if (lastLogout) {
+          localStorage.removeItem('auth_last_logout')
+          setUser(null)
+        } else {
+          setUser(user)
+        }
+      })
       .catch(() => setUser(null))
       .finally(() => setLoading(false))
   }, [])
@@ -33,7 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Stable reference — doesn't change between renders
   const logout = useCallback(async () => {
     setUser(null)
-    sessionStorage.setItem('auth_logout_pending', 'true')
+    localStorage.setItem('auth_last_logout', Date.now().toString())
     try {
       await authApi.logout()
     } catch (e) {
