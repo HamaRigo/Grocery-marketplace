@@ -12,7 +12,8 @@ import Button from '../../components/ui/Button'
 import Card from '../../components/ui/Card'
 import { PageSpinner } from '../../components/ui/Skeleton'
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)
+const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY as string | undefined
+const stripePromise = stripePublishableKey ? loadStripe(stripePublishableKey) : null
 
 function PaymentForm() {
   const stripe = useStripe()
@@ -106,7 +107,9 @@ export default function CheckoutPage() {
       )}
 
       <Card>
-        {clientSecret ? (
+        {!stripePromise ? (
+          <p className="text-sm text-danger">Payments are not configured. Set VITE_STRIPE_PUBLISHABLE_KEY and redeploy.</p>
+        ) : clientSecret ? (
           <Elements stripe={stripePromise} options={{ clientSecret }}>
             <PaymentForm />
           </Elements>

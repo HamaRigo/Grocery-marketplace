@@ -83,7 +83,7 @@ export default function Layout() {
               <ShoppingBag className="h-4 w-4" aria-hidden />
             </span>
             <span className="font-display text-lg font-extrabold tracking-tight text-brand-700 dark:text-brand-500">
-              {isRtl ? 'بقالة' : 'Bakala'}
+              {t('brand.name')}
             </span>
           </Link>
 

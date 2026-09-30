@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Phone, ShoppingBag } from 'lucide-react'
 import { useAuth } from '../context/auth'
 import { authApi } from '../api/auth'
@@ -14,6 +15,7 @@ function normalizeCountryCode(raw: string) {
 }
 
 export default function PhonePage() {
+  const { t } = useTranslation()
   const { setUser } = useAuth()
   const navigate = useNavigate()
   const [countryCode, setCountryCode] = useState(DEFAULT_COUNTRY_CODE)
@@ -53,7 +55,7 @@ export default function PhonePage() {
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-600 text-white shadow-pop">
             <ShoppingBag className="h-7 w-7" />
           </div>
-          <h1 className="font-display text-3xl font-extrabold tracking-tight text-brand-700 dark:text-brand-500">Bakala</h1>
+          <h1 className="font-display text-3xl font-extrabold tracking-tight text-brand-700 dark:text-brand-500">{t('brand.name')}</h1>
           <p className="text-ink-muted text-sm mt-1">Fresh groceries delivered to you</p>
         </div>
 

@@ -68,11 +68,27 @@ export const TenantService = {
     const active = await db.select().from(stores).where(eq(stores.status, 'active'))
     const areas  = await db.select().from(serviceAreas)
     const areaMap = Object.fromEntries(areas.map(a => [a.tenantId, a.geoData as any]))
-    return active.filter(s => {
+
+    const withGeo = active.map(s => {
       const area = areaMap[s.id]
-      if (!area) return false
-      return haversineKm(lat, lng, area.lat, area.lng) <= area.radiusKm
+      return {
+        ...s,
+        lat: area?.lat as number | undefined,
+        lng: area?.lng as number | undefined,
+        radiusKm: area?.radiusKm as number | undefined,
+      }
     })
+
+    // No coords (or 0,0) → return every active store so the catalog is usable.
+    if (!lat && !lng) return withGeo
+
+    const nearby = withGeo.filter(s => {
+      if (s.lat == null || s.lng == null || s.radiusKm == null) return false
+      return haversineKm(lat, lng, s.lat, s.lng) <= s.radiusKm
+    })
+
+    // If nothing is in range (e.g. user far from demo store), still show all stores.
+    return nearby.length > 0 ? nearby : withGeo
   },
 
   async get(storeId: string) {

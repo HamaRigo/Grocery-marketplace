@@ -1,6 +1,6 @@
-// In local dev, Vite proxies same-origin paths to the API.
-// On Vercel, set VITE_API_URL to your API origin (no trailing slash).
-const API_BASE = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '')
+// Same-origin `/api` (Vite/Vercel proxy) keeps session cookies working.
+// Set VITE_API_URL to a full origin only when you intentionally bypass the proxy.
+const API_BASE = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '')
 
 function url(path: string) {
   return `${API_BASE}${path}`

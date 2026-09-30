@@ -1,4 +1,5 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
+import { twMerge } from 'tailwind-merge'
 
 const variants = {
   primary: 'bg-brand-600 text-white hover:bg-brand-700 shadow-soft active:scale-[0.98]',
@@ -6,6 +7,8 @@ const variants = {
   ghost: 'bg-transparent text-ink-muted hover:text-ink hover:bg-surface-muted active:scale-[0.98]',
   danger: 'bg-danger text-white hover:opacity-90 active:scale-[0.98]',
   outline: 'bg-transparent text-brand-700 border border-brand-300 hover:bg-brand-50 dark:hover:bg-brand-100 active:scale-[0.98]',
+  /** White fill on dark/brand surfaces — dark label stays readable */
+  onBrand: 'bg-white text-brand-800 font-semibold hover:bg-brand-50 shadow-none active:scale-[0.98]',
 } as const
 
 const sizes = {
@@ -41,13 +44,13 @@ export default function Button({
     <button
       {...props}
       disabled={disabled || loading}
-      className={[
+      className={twMerge(
         'inline-flex items-center justify-center font-medium transition-all duration-200 ease-spring',
         'disabled:opacity-50 disabled:pointer-events-none',
         variants[variant],
         sizes[size],
         className,
-      ].join(' ')}
+      )}
     >
       {loading ? (
         <span className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />

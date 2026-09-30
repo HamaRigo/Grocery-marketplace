@@ -1,4 +1,8 @@
 {
+  "brand": {
+    "name": "Bakala",
+    "nameShop": "Bakala Shop"
+  },
   "nav": {
     "stores": "Stores",
     "myOrders": "My Orders",
@@ -76,6 +80,39 @@
     "lowStockThreshold": "Low-stock alert threshold",
     "lowStockHint": "Alert fires when available qty falls to this level.",
     "csvHelp": "CSV columns: name, description, price (e.g. 2.99), categoryId (optional)"
+  },
+  "home": {
+    "eyebrow": "Fresh groceries, nearby",
+    "tagline": "Discover local stores, order in minutes, and track delivery — all in one place.",
+    "findStores": "Find stores nearby",
+    "deliveryNearYou": "Delivery near you",
+    "locating": "Locating…",
+    "findingArea": "Finding area…",
+    "shopByCategory": "Shop by category",
+    "shopByCategoryHint": "Jump into the aisle you need",
+    "allStores": "All stores",
+    "all": "All",
+    "nearbyStores": "Nearby stores",
+    "deliveryReady": "Delivery & curbside ready",
+    "favoritesCount": "{{count}} favorites",
+    "noStoresTitle": "No stores in this category",
+    "noStoresDesc": "Try another category or open the map to search a different area.",
+    "openMap": "Open map",
+    "sameDayTitle": "Same-day delivery",
+    "sameDayDesc": "Pick a slot at checkout and track your rider live.",
+    "favoritesTitle": "Save your favorites",
+    "favoritesDesc": "Heart stores you love and reorder in a tap.",
+    "categories": {
+      "supermarket": "Supermarket",
+      "convenience": "Convenience",
+      "bakery": "Bakery",
+      "dairy": "Dairy",
+      "butcher": "Butcher",
+      "pharmacy": "Pharmacy",
+      "cafe": "Café",
+      "produce": "Produce",
+      "seafood": "Seafood"
+    }
   },
   "common": {
     "loading": "Loading…",

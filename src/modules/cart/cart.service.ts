@@ -20,7 +20,11 @@ export const CartService = {
   async upsertLine(customerId: string, tenantId: string, line: CartLine) {
     const lines = await CartService.get(customerId, tenantId)
     const idx = lines.findIndex(l => l.productId === line.productId)
-    if (idx >= 0) lines[idx] = line; else lines.push(line)
+    if (idx >= 0) {
+      lines[idx] = { ...lines[idx], ...line, qty: lines[idx].qty + line.qty }
+    } else {
+      lines.push(line)
+    }
     await redis.setex(key(customerId, tenantId), TTL, JSON.stringify(lines))
     return lines
   },

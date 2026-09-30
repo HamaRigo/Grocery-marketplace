@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Lock, Mail, ShoppingBag } from 'lucide-react'
 import { useAuth } from '../context/auth'
 import { authApi } from '../api/auth'
@@ -8,6 +9,7 @@ import Card from '../components/ui/Card'
 import { Input } from '../components/ui/Input'
 
 export default function LoginPage() {
+  const { t } = useTranslation()
   const { setUser } = useAuth()
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
@@ -45,7 +47,7 @@ export default function LoginPage() {
             <ShoppingBag className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="text-xl font-extrabold text-ink">Bakala Shop</h1>
+            <h1 className="text-xl font-extrabold text-ink">{t('brand.nameShop')}</h1>
             <p className="text-sm text-ink-faint">Staff sign in</p>
           </div>
         </div>

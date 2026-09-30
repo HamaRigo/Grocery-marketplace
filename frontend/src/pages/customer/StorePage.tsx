@@ -56,7 +56,7 @@ export default function StorePage() {
 
   const cartCount = cart?.lines?.reduce((s, l) => s + l.qty, 0) ?? 0
 
-  const { mutate: addToCart } = useMutation({
+  const { mutate: addToCart, error: addError, isError: addFailed } = useMutation({
     mutationFn: (product: Product) =>
       cartApi.addLine(id!, {
         productId: product.id,
@@ -64,8 +64,8 @@ export default function StorePage() {
         priceMinor: product.priceMinor,
         qty: 1,
       }),
-    onSuccess: (_, product) => {
-      qc.invalidateQueries({ queryKey: ['cart', id] })
+    onSuccess: (cart, product) => {
+      qc.setQueryData(['cart', id], cart)
       setAdded(product.id)
       setTimeout(() => setAdded(null), 1500)
     },
@@ -99,7 +99,7 @@ export default function StorePage() {
               </div>
             </div>
             <Link to={`/cart/${id}`}>
-              <Button className="bg-white text-brand-800 hover:bg-brand-50 shadow-none" leftIcon={<ShoppingCart className="h-4 w-4" />}>
+              <Button variant="onBrand" leftIcon={<ShoppingCart className="h-4 w-4" />}>
                 Cart{cartCount > 0 ? ` (${cartCount})` : ''}
               </Button>
             </Link>
@@ -129,6 +129,11 @@ export default function StorePage() {
       </section>
 
       <div className="sticky top-[4.25rem] z-20 -mx-1 rounded-2xl border border-line bg-surface-raised/95 backdrop-blur-md p-3 shadow-soft space-y-3">
+        {addFailed && (
+          <div className="rounded-xl border border-danger/30 bg-red-50 dark:bg-red-950/30 p-2.5 text-sm text-danger">
+            {(addError as Error)?.message || 'Could not add to cart. Please sign in again.'}
+          </div>
+        )}
         <div className="flex flex-wrap gap-2">
           <Input
             value={q}
