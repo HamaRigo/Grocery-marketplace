@@ -140,6 +140,7 @@ export default function HomePage() {
               height="14rem"
               className="border-white/20 shadow-pop"
               showLocate={false}
+              interactiveSelect={true}
               onSelect={point => {
                 navigate('/stores?view=split')
               }}
