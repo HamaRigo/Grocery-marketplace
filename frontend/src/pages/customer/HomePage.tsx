@@ -139,8 +139,10 @@ export default function HomePage() {
               selected={lat && lng ? mapCenter : null}
               height="14rem"
               className="border-white/20 shadow-pop"
-              showLocate
-              onLocate={useMyLocation}
+              showLocate={false}
+              onSelect={point => {
+                navigate('/stores?view=split')
+              }}
             />
             <div className="absolute top-3 inset-inline-4 sm:inset-inline-start-auto sm:inset-inline-end-4 sm:w-56">
               <button type="button" onClick={useMyLocation} className="w-full text-start">

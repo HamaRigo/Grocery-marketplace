@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Heart, List, Map as MapIcon, Navigation, Search, X } from 'lucide-react'
 import { storesApi, type Store } from '../../api/stores'
@@ -26,9 +26,12 @@ export default function StoresPage() {
   const [category, setCategory] = useState<StoreCategory | 'all'>('all')
   const [favoritesOnly, setFavoritesOnly] = useState(false)
   const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null)
-  const [view, setView] = useState<ViewMode>(() =>
-    typeof window !== 'undefined' && window.innerWidth < 768 ? 'list' : 'split'
-  )
+  const [searchParams] = useSearchParams()
+  const [view, setView] = useState<ViewMode>(() => {
+    const viewParam = searchParams.get('view') as ViewMode | null
+    if (viewParam === 'split' || viewParam === 'map' || viewParam === 'list') return viewParam
+    return typeof window !== 'undefined' && window.innerWidth < 768 ? 'list' : 'split'
+  })
 
   const { data: stores, isLoading, error } = useQuery({
     queryKey: ['stores', lat, lng],
