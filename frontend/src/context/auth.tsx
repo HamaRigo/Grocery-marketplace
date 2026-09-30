@@ -18,7 +18,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Check existing session on mount (e.g. page refresh).
   useEffect(() => {
-    if (localStorage.getItem('auth_logged_out') === 'true') {
+    if (localStorage.getItem('auth_status') === 'logged_out') {
       setUser(null)
       setLoading(false)
       return
@@ -27,8 +27,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     authApi.me()
       .then(user => {
         if (user) {
-          // If we are logged in, ensure the logout flag is cleared
-          localStorage.removeItem('auth_logged_out')
           setUser(user)
         } else {
           setUser(null)
@@ -41,7 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Stable reference — doesn't change between renders
   const logout = useCallback(async () => {
     setUser(null)
-    localStorage.setItem('auth_logged_out', 'true')
+    localStorage.setItem('auth_status', 'logged_out')
     try {
       await authApi.logout()
     } catch (e) {
