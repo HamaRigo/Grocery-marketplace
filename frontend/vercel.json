@@ -8,6 +8,26 @@
       "destination": "https://api-production-a5e76.up.railway.app/:path*"
     },
     {
+      "source": "/auth/:path*",
+      "destination": "https://api-production-a5e76.up.railway.app/auth/:path*"
+    },
+    {
+      "source": "/cart/:path*",
+      "destination": "https://api-production-a5e76.up.railway.app/cart/:path*"
+    },
+    {
+      "source": "/orders/:path*",
+      "destination": "https://api-production-a5e76.up.railway.app/orders/:path*"
+    },
+    {
+      "source": "/catalog/:path*",
+      "destination": "https://api-production-a5e76.up.railway.app/catalog/:path*"
+    },
+    {
+      "source": "/stores/:path*",
+      "destination": "https://api-production-a5e76.up.railway.app/stores/:path*"
+    },
+    {
       "source": "/((?!assets/).*)",
       "destination": "/index.html"
     }
