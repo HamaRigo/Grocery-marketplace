@@ -6,7 +6,7 @@ export interface SessionUser {
 }
 
 export const authApi = {
-  me:          () => get<SessionUser>('/auth/me'),
+  me:          () => get<SessionUser>(`/auth/me?t=${Date.now()}`),
   phoneLogin:  (phone: string)                    => post<SessionUser>('/auth/phone', { phone }),
   login:       (email: string, password: string)  => post<SessionUser>('/auth/login', { email, password }),
   register:    (email: string, password: string, phone?: string) =>

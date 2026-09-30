@@ -24,11 +24,11 @@
       "destination": "https://api-production-a5e76.up.railway.app/catalog/:path*"
     },
     {
-      "source": "/api/stores/:path*",
+      "source": "/stores/:path*",
       "destination": "https://api-production-a5e76.up.railway.app/stores/:path*"
     },
     {
-      "source": "/((?!assets/).*)",
+      "source": "/((?!assets/|api/|auth/|cart/|orders/|catalog/|stores/).*)",
       "destination": "/index.html"
     }
   ]

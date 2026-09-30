@@ -26,8 +26,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Stable reference — doesn't change between renders
   const logout = useCallback(async () => {
-    await authApi.logout().catch(() => null)
     setUser(null)
+    try {
+      await authApi.logout()
+    } catch (e) {
+      console.error('Logout failed:', e)
+    }
+    window.location.href = '/'
   }, [])
 
   // Derived values memoized so they only recompute when user changes
