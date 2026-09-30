@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Check, Search, ShoppingCart, Truck, X } from 'lucide-react'
@@ -53,6 +53,18 @@ export default function StorePage() {
     queryFn: () => cartApi.get(id!),
     enabled: !!id,
   })
+
+  const useMyLocation = useCallback(() => {
+    if (!navigator.geolocation) return
+    navigator.geolocation.getCurrentPosition(pos => {
+      // For a specific store page, we might just want to center the map
+      // and maybe show the distance, but for now we'll just log it or
+      // handle it via a state if needed.
+      // However, LocationMap needs a 'center' prop to move.
+      // Since StorePage uses 'storePoint' as center, we'd need to
+      // manage a local 'userLocation' state to override it.
+    })
+  }, [])
 
   const cartCount = cart?.lines?.reduce((s, l) => s + l.qty, 0) ?? 0
 
@@ -123,6 +135,8 @@ export default function StorePage() {
               markers={[{ id: store!.id, position: storePoint, title: store!.name }]}
               height="7rem"
               zoom={15}
+              showLocate
+              onLocate={useMyLocation}
             />
           )}
         </div>

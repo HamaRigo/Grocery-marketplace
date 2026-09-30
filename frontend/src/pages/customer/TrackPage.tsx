@@ -49,6 +49,15 @@ export default function TrackPage() {
     enabled: !!id,
   })
 
+  const useMyLocation = useCallback(() => {
+    if (!navigator.geolocation) return
+    navigator.geolocation.getCurrentPosition(pos => {
+      console.log('User location:', pos.coords.latitude, pos.coords.longitude)
+      // In TrackPage, the map centers on the rider's location.
+      // We can't easily "center" on user without changing the map's center prop.
+    })
+  }, [])
+
   useEffect(() => {
     if (!id) return
     const envWs = (import.meta.env.VITE_WS_URL as string | undefined)?.replace(/\/$/, '')
