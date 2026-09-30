@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import {
-  ArrowRight, Heart, MapPin, Search, Sparkles, Truck,
+  ArrowRight, Heart, MapPin, Search, Sparkles, Truck, LocateFixed,
 } from 'lucide-react'
 import { storesApi, type Store } from '../../api/stores'
 import { useAuth } from '../../context/auth'
@@ -139,12 +139,14 @@ export default function HomePage() {
               selected={lat && lng ? mapCenter : null}
               height="14rem"
               className="border-white/20 shadow-pop"
+              showLocate
+              onLocate={useMyLocation}
             />
             <div className="absolute -bottom-3 inset-inline-4 sm:inset-inline-start-auto sm:inset-inline-end-4 sm:w-56">
               <button type="button" onClick={useMyLocation} className="w-full text-start">
                 <Card padding="sm" className="shadow-lift border-brand-200/50 hover:border-brand-400 transition-colors">
                   <p className="text-xs text-ink-faint flex items-center gap-1">
-                    <MapPin className="h-3 w-3 text-brand-600 shrink-0" /> {t('home.deliveryNearYou')}
+                    <LocateFixed className="h-3 w-3 text-brand-600 shrink-0" /> {t('home.deliveryNearYou')}
                   </p>
                   <p className="text-sm font-semibold text-ink mt-0.5 truncate">
                     {locationLabel}
