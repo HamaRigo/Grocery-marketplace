@@ -155,7 +155,11 @@ function GoogleLocationMap({
           size="icon"
           variant="secondary"
           className="absolute bottom-3 right-3 z-50 shadow-lift"
-          onClick={e => { e.stopPropagation(); onLocate() }}
+          onClick={e => {
+            e.preventDefault();
+            e.stopPropagation();
+            onLocate();
+          }}
           aria-label="Use my location"
         >
           <LocateFixed className="h-4 w-4 text-brand-600" />
@@ -378,7 +382,11 @@ function OsmLocationMap({
           size="icon"
           variant="secondary"
           className="absolute bottom-3 right-3 z-50 shadow-lift"
-          onClick={e => { e.stopPropagation(); onLocate() }}
+          onClick={e => {
+            e.preventDefault();
+            e.stopPropagation();
+            onLocate();
+          }}
           aria-label="Use my location"
         >
           <LocateFixed className="h-4 w-4 text-brand-600" />
