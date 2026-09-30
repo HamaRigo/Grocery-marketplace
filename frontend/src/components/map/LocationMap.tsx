@@ -25,8 +25,6 @@ interface LocationMapProps {
   height?: string
   className?: string
   interactiveSelect?: boolean
-  showLocate?: boolean
-  onLocate?: () => void
   zoom?: number
 }
 
@@ -84,10 +82,10 @@ function GoogleLocationMap({
   height = '18rem',
   className = '',
   interactiveSelect,
+  zoom = 13,
   showLocate,
   onLocate,
-  zoom = 13,
-}: LocationMapProps) {
+}: LocationMapProps & { showLocate?: boolean; onLocate?: () => void }) {
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: GOOGLE_MAPS_KEY!,
     id: 'bakala-maps',
@@ -149,22 +147,6 @@ function GoogleLocationMap({
           />
         ))}
       </GoogleMap>
-      {showLocate && onLocate && (
-        <Button
-          type="button"
-          size="icon"
-          variant="secondary"
-          className="absolute bottom-3 right-3 z-50 shadow-lift"
-          onClick={e => {
-            e.preventDefault();
-            e.stopPropagation();
-            onLocate();
-          }}
-          aria-label="Use my location"
-        >
-          <LocateFixed className="h-4 w-4 text-brand-600" />
-        </Button>
-      )}
     </div>
   )
 }
@@ -178,9 +160,10 @@ function OsmLocationMap({
   height = '18rem',
   className = '',
   interactiveSelect,
+  zoom = 13,
   showLocate,
   onLocate,
-}: LocationMapProps) {
+}: LocationMapProps & { showLocate?: boolean; onLocate?: () => void }) {
   const mapRef = useRef<HTMLDivElement | null>(null)
   const viewCenterRef = useRef<MapPoint>(center)
   const animFrameRef = useRef<number | null>(null)
@@ -376,23 +359,6 @@ function OsmLocationMap({
         </div>
       )}
 
-      {showLocate && onLocate && (
-        <Button
-          type="button"
-          size="icon"
-          variant="secondary"
-          className="absolute bottom-3 right-3 z-50 shadow-lift"
-          onClick={e => {
-            e.preventDefault();
-            e.stopPropagation();
-            onLocate();
-          }}
-          aria-label="Use my location"
-        >
-          <LocateFixed className="h-4 w-4 text-brand-600" />
-        </Button>
-      )}
-
       <div className="absolute bottom-2 left-2 z-30 rounded-lg bg-surface-raised/90 px-2 py-1 text-[10px] text-ink-faint border border-line">
         OpenStreetMap
       </div>
@@ -400,7 +366,7 @@ function OsmLocationMap({
   )
 }
 
-export default function LocationMap(props: LocationMapProps) {
+export default function LocationMap(props: LocationMapProps & { showLocate?: boolean; onLocate?: () => void }) {
   const center = props.center ?? DEFAULT_CENTER
   if (GOOGLE_MAPS_KEY) {
     return <GoogleLocationMap {...props} center={center} />

@@ -24,7 +24,7 @@
       "destination": "https://api-production-a5e76.up.railway.app/catalog/:path*"
     },
     {
-      "source": "/stores/:path*",
+      "source": "/api/stores/:path*",
       "destination": "https://api-production-a5e76.up.railway.app/stores/:path*"
     },
     {
