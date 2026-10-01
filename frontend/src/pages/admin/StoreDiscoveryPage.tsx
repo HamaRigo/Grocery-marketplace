@@ -30,9 +30,6 @@ export default function StoreDiscoveryPage() {
 
   // Initialize with user's location
   useEffect(() => {
-
-  // Initialize with user's location
-  useEffect(() => {
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -138,6 +135,26 @@ export default function StoreDiscoveryPage() {
 
       <div className="grid lg:grid-cols-[1fr_400px] gap-6">
         <div className="space-y-4">
+          <div className="flex gap-3 items-end mb-4">
+            <div className="flex-1">
+              <label className="text-xs font-medium text-ink-faint mb-1 block">Find a Location</label>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="City, Country, or Address..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleSearch()}
+                />
+                <Button
+                  onClick={handleSearch}
+                  disabled={searchLoading}
+                  rightIcon={searchLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Navigation className="h-4 w-4" />}
+                >
+                  Search
+                </Button>
+              </div>
+            </div>
+          </div>
           <div className="flex gap-3 items-end">
             <div className="flex-1">
               <label className="text-xs font-medium text-ink-faint mb-1 block">Search Radius (km)</label>
@@ -156,7 +173,6 @@ export default function StoreDiscoveryPage() {
               {loading ? 'Searching...' : 'Discover Stores'}
             </Button>
           </div>
-
           <div className="relative">
             <LocationMap
               center={center}
