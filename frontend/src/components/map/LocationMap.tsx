@@ -89,6 +89,7 @@ function GoogleLocationMap({
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: GOOGLE_MAPS_KEY!,
     id: 'bakala-maps',
+    libraries: ['places'],
   })
 
   if (loadError) {

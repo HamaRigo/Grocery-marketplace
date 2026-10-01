@@ -26,6 +26,10 @@ export default function StoreDiscoveryPage() {
   const [locationLoading, setLocationLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchLoading, setSearchLoading] = useState(false)
+  const [suggestions, setSuggestions] = useState<any[]>([])
+
+  // Initialize with user's location
+  useEffect(() => {
 
   // Initialize with user's location
   useEffect(() => {
