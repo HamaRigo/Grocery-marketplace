@@ -4,7 +4,7 @@
   "outputDirectory": "dist",
   "headers": [
     {
-      "source": "/auth/:path*",
+      "source": "/((?!assets/).*)",
       "headers": [
         {
           "key": "Cache-Control",

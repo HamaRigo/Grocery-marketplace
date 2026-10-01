@@ -18,6 +18,7 @@ import SubscriptionPage from './pages/manager/SubscriptionPage'
 import AdminStoresPage from './pages/admin/StoresPage'
 import AdminOrdersPage from './pages/admin/OrdersPage'
 import ReportsPage from './pages/admin/ReportsPage'
+import StoreDiscoveryPage from './pages/admin/StoreDiscoveryPage'
 import RiderPage from './pages/rider/RiderPage'
 import ActiveJobPage from './pages/rider/ActiveJobPage'
 
@@ -61,6 +62,7 @@ export default function App() {
         <Route path="/admin"         element={<AdminStoresPage />} />
         <Route path="/admin/orders"  element={<AdminOrdersPage />} />
         <Route path="/admin/reports" element={<ReportsPage />} />
+        <Route path="/admin/discovery" element={<StoreDiscoveryPage />} />
 
         <Route path="/rider"              element={<RiderPage />} />
         <Route path="/rider/job/:jobId"   element={<ActiveJobPage />} />

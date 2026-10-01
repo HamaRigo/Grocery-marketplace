@@ -1,4 +1,7 @@
 import { Client } from '@elastic/elasticsearch'
+import { db } from '../../db'
+import { stores } from '../../db/schema'
+import { calculateDistanceKm, stringSimilarity } from '../../lib/matching'
 
 const es = new Client({ node: process.env.ELASTICSEARCH_URL ?? 'http://localhost:9200' })
 
@@ -74,5 +77,81 @@ export const DiscoveryService = {
     if (categoryId) must.push({ term: { categoryId } })
     const { hits } = await es.search({ index: PRODUCTS_IDX, query: { bool: { must } } })
     return hits.hits.map(h => h._source)
+  },
+
+  async discoverOsmStores(lat: number, lng: number, radiusKm = 5) {
+    const radiusMeters = radiusKm * 1000
+    const query = \`[out:json][timeout:25];
+      node["shop"~"supermarket|convenience"](around:\${radiusMeters},\${lat},\${lng});
+      out center;\`
+
+    const response = await fetch(\`https://overpass-api.de/api/interpreter?data=\${encodeURIComponent(query)}\`)
+    if (!response.ok) throw new Error(\`OSM API error: \${response.statusText}\`)
+
+    const data = await response.json()
+    return (data.elements || []).map((e: any) => ({
+      osmId: e.id,
+      name: e.tags.name || 'Unnamed Store',
+      lat: e.lat,
+      lng: e.lon,
+      tags: e.tags
+    }))
+  },
+
+  async importOsmStore(data: { name: string; lat: number; lng: number }) {
+    // 1. Deduplication: Check for similar existing stores within 200m
+    const candidates = await es.search({
+      index: STORES_IDX,
+      query: {
+        bool: {
+          filter: { 
+            geo_distance: { 
+              distance: '200m', 
+              center: { lat: data.lat, lon: data.lng } 
+            } 
+          },
+        },
+      },
+    })
+
+    for (const hit of candidates.hits.hits) {
+      const store = hit._source as any;
+      const distKm = calculateDistanceKm(data.lat, data.lng, store.center.lat, store.center.lon);
+      const distMeters = distKm * 1000;
+
+      // Matching Logic:
+      // - Extremely close (< 10m): Automatic match
+      // - Very close (< 50m) AND similar name (> 0.8 similarity): Match
+      if (distMeters < 10) {
+        return { id: store.tenantId, name: store.name };
+      }
+      if (distMeters < 50 && stringSimilarity(data.name.toLowerCase(), store.name.toLowerCase()) > 0.8) {
+        return { id: store.tenantId, name: store.name };
+      }
+    }
+
+    // 2. No match found, proceed with insertion
+    const id = crypto.randomUUID()
+
+    await db.insert(stores).values({
+      id,
+      name: data.name,
+      lat: data.lat,
+      lng: data.lng,
+      status: 'pending',
+      dispatchPolicy: 'OWN_FIRST',
+      radiusKm: 5
+    })
+
+    await this.indexStore({
+      id,
+      name: data.name,
+      status: 'pending',
+      lat: data.lat,
+      lng: data.lng,
+      radiusKm: 5
+    })
+
+    return { id, name: data.name }
   },
 }
