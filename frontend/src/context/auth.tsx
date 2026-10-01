@@ -24,16 +24,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return
     }
 
-    authApi.me()
-      .then(user => {
-        if (user) {
-          setUser(user)
+    async function recoverSession() {
+      try {
+        const sessionUser = await authApi.me()
+        if (sessionUser) {
+          setUser(sessionUser)
         } else {
           setUser(null)
         }
-      })
-      .catch(() => setUser(null))
-      .finally(() => setLoading(false))
+      } catch (e) {
+        console.error('Session recovery failed:', e)
+        setUser(null)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    recoverSession()
   }, [])
 
   // Stable reference — doesn't change between renders
